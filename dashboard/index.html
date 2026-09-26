@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IDR-NAV — Intelligent Dead-Reckoning Navigation Dashboard</title>
+  <meta name="description" content="Engineering dashboard for IDR-NAV: Smartphone-based inertial dead-reckoning navigation in GNSS-denied environments. Real IO-VNBD benchmark results.">
+  <!-- Google Fonts: Space Grotesk & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ================= TOP NAVIGATION ================= -->
+  <header class="top-nav">
+    <div class="nav-brand">
+      <span class="brand-tag">PROJECT IDR-NAV</span>
+      <span class="brand-title">INTELLIGENT DEAD RECKONING</span>
+    </div>
+
+    <nav class="nav-links">
+      <a href="#overview" class="nav-link active">01 Overview</a>
+      <a href="#trajectory" class="nav-link">02 Trajectory</a>
+      <a href="#drift" class="nav-link">03 Drift Analysis</a>
+    </nav>
+
+    <div class="nav-controls">
+      <!-- Pinned GNSS Status Indicator -->
+      <div id="gnss-status-badge" class="status-indicator online" title="Current Navigation Operating Mode">
+        <span class="status-dot"></span>
+        <span id="gnss-status-text">GNSS + INS (ONLINE)</span>
+      </div>
+
+      <!-- Dataset Selector -->
+      <div class="dataset-switcher" role="group" aria-label="Dataset Switcher">
+        <span class="switcher-label">DATASET:</span>
+        <button id="btn-vta1a" class="btn-dataset active" onclick="switchDataset('S-Vta1a')">S-Vta1a</button>
+        <button id="btn-vta2" class="btn-dataset" onclick="switchDataset('S-Vta2')">S-Vta2</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= GNSS ALERT TOAST (SECTION 13A) ================= -->
+  <div id="gnss-alert-toast" class="gnss-toast hidden" role="alert" aria-live="assertive">
+    <div class="toast-icon" id="toast-icon">⚠</div>
+    <div class="toast-body">
+      <div class="toast-title" id="toast-title">GNSS SIGNAL LOST</div>
+      <div class="toast-desc" id="toast-desc">Switched to inertial dead reckoning (IMU-only)</div>
+      <div class="toast-tag">SIMULATED OUTAGE — DEMONSTRATION</div>
+    </div>
+    <button class="toast-close" onclick="dismissToast()" aria-label="Close notification">×</button>
+  </div>
+
+  <main class="page-container">
+
+    <!-- ================= 01 HERO / OVERVIEW SECTION ================= -->
+    <section id="overview" class="section hero-section">
+      <div class="hero-header">
+        <div class="hero-meta">
+          <span class="meta-label">RESEARCH BENCHMARK</span>
+          <span class="meta-sep">/</span>
+          <span id="hero-dataset-name" class="meta-value">S-Vta1a</span>
+          <span class="meta-sep">/</span>
+          <span id="hero-dataset-desc" class="meta-sub">Driver E (Aggressive) — Mixed UK Motorways & Arterial Roundabouts</span>
+        </div>
+
+        <h1 class="hero-title">
+          INTELLIGENT<br>
+          <span class="accent-text">DEAD-RECKONING</span><br>
+          NAVIGATION
+        </h1>
+
+        <p class="hero-lead">
+          Smartphone-based vehicle localization for <strong>GNSS-denied environments</strong>. 
+          Evaluating pure classical inertial dead reckoning and phone-to-vehicle alignment against real 
+          <strong>IO-VNBD</strong> benchmark ground-truth runs.
+        </p>
+
+        <div class="hero-actions">
+          <a href="#trajectory" class="btn-primary">EXPLORE TRAJECTORIES ↓</a>
+          <button id="btn-simulate-gnss" class="btn-secondary" onclick="toggleGnssOutage()">
+            <span class="btn-icon">⚡</span>
+            <span id="btn-simulate-text">SIMULATE GNSS OUTAGE</span>
+          </button>
+          <span class="sim-notice">DEMO: Test seamless GNSS lost & recovery transition</span>
+        </div>
+      </div>
+
+      <!-- Over-sized Dynamic Metrics Ribbon -->
+      <div class="metrics-ribbon">
+        <div class="metric-block">
+          <div class="metric-num"><span id="val-distance">40.55</span><span class="metric-unit">KM</span></div>
+          <div class="metric-label">DISTANCE TRAVELLED</div>
+          <div class="metric-sub">Verified Geodetic ENU Sum</div>
+        </div>
+
+        <div class="metric-block">
+          <div class="metric-num"><span id="val-duration">42.8</span><span class="metric-unit">MIN</span></div>
+          <div class="metric-label">RUN DURATION</div>
+          <div class="metric-sub" id="val-samples">25,676 samples @ 10 Hz</div>
+        </div>
+
+        <div class="metric-block">
+          <div class="metric-num"><span id="val-peak-speed">103.6</span><span class="metric-unit">KM/H</span></div>
+          <div class="metric-label">PEAK SPEED</div>
+          <div class="metric-sub">Mean: <span id="val-mean-speed">56.5</span> km/h</div>
+        </div>
+
+        <div class="metric-block accent">
+          <div class="metric-num warning-text"><span id="val-drift-pct">869.0</span><span class="metric-unit">%</span></div>
+          <div class="metric-label">INS DRIFT (% OF DISTANCE)</div>
+          <div class="metric-sub">Classical Dead Reckoning Baseline</div>
+        </div>
+      </div>
+
+      <!-- Honest System Status Block -->
+      <div class="system-status-container">
+        <div class="status-header">
+          <span class="block-tag">SYSTEM ARCHITECTURE STATUS</span>
+          <span class="block-note">Honest Operational State · Phases 1–3 Complete · Backend Frozen</span>
+        </div>
+
+        <div class="status-grid">
+          <!-- Phase 1 -->
+          <div class="status-card complete">
+            <div class="card-status-badge">COMPLETE</div>
+            <div class="card-phase">PHASE 01</div>
+            <div class="card-title">IO-VNBD Data Pipeline</div>
+            <div class="card-detail">Ingestion, WGS84→ENU geodetic projection, timestamp jitter audit (5/5 tests passed).</div>
+          </div>
+
+          <!-- Phase 2 -->
+          <div class="status-card complete">
+            <div class="card-status-badge">COMPLETE</div>
+            <div class="card-phase">PHASE 02</div>
+            <div class="card-title">Classical INS Baseline</div>
+            <div class="card-detail">Strapdown quaternion attitude propagation & trapezoidal integration (12/12 tests passed).</div>
+          </div>
+
+          <!-- Phase 3 -->
+          <div class="status-card complete">
+            <div class="card-status-badge">COMPLETE</div>
+            <div class="card-phase">PHASE 03</div>
+            <div class="card-title">Phone-Vehicle Roll/Pitch Alignment</div>
+            <div class="card-detail">Rodrigues minimal-rotation leveling (det R = 1.000000, ortho err 10⁻¹⁶, 21/21 tests passed).</div>
+          </div>
+
+          <!-- Phase 4 (Planned) -->
+          <div class="status-card planned">
+            <div class="card-status-badge planned-badge">PLANNED</div>
+            <div class="card-phase">PHASE 04</div>
+            <div class="card-title">AI Speed Estimation</div>
+            <div class="card-detail">Spectrogram CNN/LSTM forward speed prediction directly from smartphone vibrations.</div>
+          </div>
+
+          <!-- Phase 7 (Planned) -->
+          <div class="status-card planned">
+            <div class="card-status-badge planned-badge">PLANNED</div>
+            <div class="card-phase">PHASE 07</div>
+            <div class="card-title">EKF / UKF Sensor Fusion</div>
+            <div class="card-detail">Extended Kalman filter binding accelerometer double-integration drift.</div>
+          </div>
+
+          <!-- Phase 8 (Planned) -->
+          <div class="status-card planned">
+            <div class="card-status-badge planned-badge">PLANNED</div>
+            <div class="card-phase">PHASE 08</div>
+            <div class="card-title">Non-Holonomic Constraints</div>
+            <div class="card-detail">Zero lateral/vertical velocity constraints (v_y ≈ 0, v_z ≈ 0) in vehicle FLU frame.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 02 TRAJECTORY COMPARISON ================= -->
+    <section id="trajectory" class="section trajectory-section">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <span class="section-num">02</span>
+          <div>
+            <h2 class="section-title">TRAJECTORY COMPARISON</h2>
+            <p class="section-subtitle">Ground Truth vs Classical Pure INS (Phase 2) vs Leveled Vehicle INS (Phase 3)</p>
+          </div>
+        </div>
+
+        <div class="trajectory-controls">
+          <!-- View Zoom Modes -->
+          <div class="control-group">
+            <span class="control-label">VIEW SCALE:</span>
+            <button id="btn-scale-full" class="btn-toggle active" onclick="setScaleMode('full')">Full Scale (Drift Visible)</button>
+            <button id="btn-scale-zoom" class="btn-toggle" onclick="setScaleMode('zoom')">Zoom to Ground Truth</button>
+          </div>
+
+          <!-- Layer Toggles -->
+          <div class="control-group layers">
+            <label class="layer-toggle gt">
+              <input type="checkbox" id="layer-gt" checked onchange="toggleLayer('gt')">
+              <span class="indicator gt-ind"></span> Ground Truth (Real GNSS/VBOX)
+            </label>
+            <label class="layer-toggle p2">
+              <input type="checkbox" id="layer-p2" checked onchange="toggleLayer('p2')">
+              <span class="indicator p2-ind"></span> Phase 2: Pure Body INS
+            </label>
+            <label class="layer-toggle p3">
+              <input type="checkbox" id="layer-p3" checked onchange="toggleLayer('p3')">
+              <span class="indicator p3-ind"></span> Phase 3: Leveled Vehicle INS
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Canvas Trajectory Display -->
+      <div class="canvas-viewport">
+        <canvas id="trajectory-canvas"></canvas>
+        <div id="canvas-tooltip" class="canvas-tooltip hidden"></div>
+        <div class="canvas-watermark" id="canvas-watermark">LOCAL ENU TANGENT PLANE (METERS)</div>
+      </div>
+
+      <div class="trajectory-caption">
+        <div class="caption-icon">ℹ</div>
+        <div class="caption-text">
+          <strong>The Fundamental Navigation Problem:</strong> Notice the enormous scale difference. While ground truth covers <span id="caption-dist">40.55</span> km across public roads, classical dead reckoning without velocity aiding diverges to <span id="caption-err">352.36</span> km within <span id="caption-time">42.8</span> minutes due to double-integration of consumer MEMS sensor bias.
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 03 DRIFT ANALYSIS SECTION ================= -->
+    <section id="drift" class="section drift-section">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <span class="section-num">03</span>
+          <div>
+            <h2 class="section-title">INERTIAL DRIFT ANALYSIS</h2>
+            <p class="section-subtitle">Why Classical Dead Reckoning Diverges & Why AI is Required</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="drift-grid">
+        <!-- Error Growth Canvas Chart -->
+        <div class="drift-chart-container">
+          <div class="chart-header">
+            <span class="chart-title">2D Horizontal Position Error vs Elapsed Time</span>
+            <div class="chart-legend">
+              <span class="legend-item"><span class="legend-line p2-line"></span> Phase 2 (Body Frame)</span>
+              <span class="legend-item"><span class="legend-line p3-line"></span> Phase 3 (Leveled Vehicle)</span>
+            </div>
+          </div>
+          <div class="chart-canvas-wrap">
+            <canvas id="drift-canvas"></canvas>
+          </div>
+        </div>
+
+        <!-- Honest Numbers & Engineering Insights -->
+        <div class="drift-insight-panel">
+          <div class="insight-box">
+            <div class="insight-tag">OBSERVATION & QUANTITATIVE FINDING</div>
+            <h3 class="insight-headline">Coordinate alignment alone does not eliminate long-term inertial drift.</h3>
+            <p class="insight-body">
+              Phase 3 successfully levels the smartphone's gravity vector to machine precision (det R = 1.000000). 
+              However, because consumer MEMS accelerometers carry residual in-run biases (~0.05 m/s²), rotating 
+              the sensor frame without a velocity constraint (NHC or AI Speed) still leads to quadratic divergence.
+            </p>
+          </div>
+
+          <!-- Side-by-Side Final Metrics -->
+          <div class="comparison-numbers">
+            <div class="comp-col">
+              <div class="comp-header">PHASE 2 (BODY INS)</div>
+              <div class="comp-metric">
+                <span class="comp-val" id="p2-final-err">353.0</span> <span class="comp-unit">KM</span>
+              </div>
+              <div class="comp-sub">Final 2D Position Error</div>
+              <div class="comp-meta">RMSE: <span id="p2-rmse">171.2</span> km · Drift: <span id="p2-drift">870.6</span>%</div>
+            </div>
+
+            <div class="comp-col highlight">
+              <div class="comp-header">PHASE 3 (ALIGNED INS)</div>
+              <div class="comp-metric">
+                <span class="comp-val" id="p3-final-err">352.4</span> <span class="comp-unit">KM</span>
+              </div>
+              <div class="comp-sub">Final 2D Position Error</div>
+              <div class="comp-meta">RMSE: <span id="p3-rmse">170.9</span> km · Drift: <span id="p3-drift">869.0</span>%</div>
+            </div>
+          </div>
+
+          <div class="delta-box" id="delta-box">
+            <span class="delta-label">ALIGNMENT IMPACT (Δ P3 - P2):</span>
+            <span class="delta-value" id="val-delta">-0.64 km (-1.58% drift change)</span>
+          </div>
+
+          <!-- Motivation for Phase 4+ -->
+          <div class="roadmap-callout">
+            <span class="callout-tag">NEXT TECHNICAL STEP</span>
+            <p class="callout-text">
+              To transform this diverging baseline into viable navigation, <strong>Phase 4 (AI Speed Estimation)</strong> 
+              and <strong>Phase 8 (Non-Holonomic Constraints)</strong> will provide direct forward velocity updates ($v_x^v$) 
+              and lateral zero-velocity updates ($v_y^v \approx 0$), eliminating unbounded integration.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="dashboard-footer">
+    <div class="footer-left">
+      <span class="footer-brand">IDR-NAV</span>
+      <span class="footer-desc">Intelligent GNSS-Denied Vehicle Navigation Using AI-Enhanced Dead Reckoning</span>
+    </div>
+    <div class="footer-center">
+      <span>Backend Status: <strong>FROZEN</strong> (Phases 1–3 Complete)</span>
+    </div>
+    <div class="footer-right">
+      <span>Real IO-VNBD Benchmark Data · Coventry University</span>
+    </div>
+  </footer>
+
+  <!-- Real Static Pre-generated Data (Zero CORS, Zero network latency) -->
+  <script src="data/dashboard_data.js"></script>
+  <!-- Main Dashboard Logic -->
+  <script src="app.js"></script>
+</body>
+</html>
