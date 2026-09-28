@@ -3,22 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IDR-NAV — Intelligent Navigation for GNSS-Denied Environments</title>
-  <meta name="description" content="IDR-NAV: Smartphone-based inertial dead-reckoning navigation in GNSS-denied environments. Demonstrated in Pune, Maharashtra with real IO-VNBD benchmark kinematics.">
+  <title>UnLost — Intelligent Navigation for GNSS-Denied Environments</title>
+  <meta name="description" content="UnLost: Smartphone-based inertial dead-reckoning navigation in GNSS-denied environments. Demonstrated in Pune, Maharashtra with real IO-VNBD benchmark kinematics.">
   <!-- Google Fonts: Space Grotesk, Inter & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Leaflet Mapping Library CSS -->
+  <link rel="stylesheet" href="lib/leaflet.css">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="tab-navigation">
 
-  <!-- ================= TOP NAVIGATION BAR ================= -->
-  <header class="top-nav">
+  <!-- ================= TOP FLOATING NAVIGATION BAR ================= -->
+  <header class="top-nav" id="main-top-nav">
     <div class="nav-left-group">
-      <div class="nav-brand" onclick="switchAppTab('navigation')" style="cursor: pointer;">
-        <span class="brand-tag">PROJECT IDR-NAV</span>
-        <span class="brand-title">INTELLIGENT DEAD RECKONING</span>
+      <div class="nav-brand" onclick="switchAppTab('navigation')" title="UnLost Home" style="cursor: pointer;">
+        <div class="unlost-brand-row">
+          <span class="unlost-brand-icon">▲</span>
+          <span class="unlost-brand-name">UnLost</span>
+        </div>
       </div>
       <div class="nav-geo-pill">
         <span class="geo-dot">📍</span>
@@ -46,7 +50,7 @@
       <!-- Pinned GNSS Status Indicator -->
       <div id="gnss-status-badge" class="status-indicator online" title="Current Navigation Operating Mode">
         <span class="status-dot"></span>
-        <span id="gnss-status-text">GNSS + INS (ONLINE)</span>
+        <span id="gnss-status-text">GNSS AVAILABLE</span>
       </div>
 
       <!-- Quick Outage Demonstration Trigger -->
@@ -72,325 +76,286 @@
 
     <!-- ==========================================================================
          VIEW 1: PRIMARY NAVIGATION APPLICATION (DEFAULT LANDING VIEW)
+         FULL-SCREEN OSM MAP WITH FLOATING CLEAN UI OVERLAYS
          ========================================================================== -->
     <div id="view-navigation" class="app-view active">
       
-      <!-- Compact Product Headline Banner -->
-      <div class="nav-product-header">
-        <div class="nav-product-titles">
-          <div class="nav-product-badge-row">
-            <span class="badge-app-title">IDR-NAV</span>
-            <span class="badge-product-tag">PRODUCT FLOW</span>
-            <span class="badge-playback-tag">LIVE SIMULATION</span>
+      <!-- Full Viewport Map Container -->
+      <div class="nav-map-viewport" id="nav-map-viewport">
+        <!-- Real Interactive OpenStreetMap Road Map (Edge-to-Edge) -->
+        <div id="nav-osm-map" class="nav-osm-map"></div>
+
+        <!-- ================= SCREEN 1: DESTINATION SELECTION (HOME PAGE) ================= -->
+        <div id="flow-view-destination" class="flow-overlay-card flow-home-card">
+          <div class="flow-card-header">
+            <div class="flow-badge-wrap">
+              <span class="tag-prototype">PROTOTYPE</span>
+              <span class="geo-context-tag">PUNE, MAHARASHTRA</span>
+            </div>
+            <h2 class="flow-card-title">Where do you want to go?</h2>
+            <p class="flow-card-desc">
+              Search destination or select a recent search across Pune.
+            </p>
           </div>
-          <h1 class="nav-product-headline">Intelligent Navigation for GNSS-Denied Environments</h1>
+
+          <!-- Manual Destination Search Bar -->
+          <div class="flow-search-bar active-search">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="destination-search-input" class="search-input" placeholder="Search destination (e.g. Pune Airport, Hinjawadi, Mumbai)..." autocomplete="off">
+            <button id="btn-search-go" class="btn-search-go" onclick="submitDestinationSearch()" title="Preview route">
+              ROUTE ➔
+            </button>
+          </div>
+
+          <!-- Recent Searches Section -->
+          <div class="recent-searches-section">
+            <div class="recent-header">
+              <span class="recent-title"><span class="recent-icon">🕒</span> RECENT SEARCHES</span>
+              <span class="recent-tag">PROTOTYPE</span>
+            </div>
+            <div class="recent-searches-list">
+              
+              <!-- Recent 1: Pune Airport -->
+              <div class="recent-item" id="dest-card-pune-airport" onclick="selectPuneRoute('pune-airport')">
+                <div class="recent-item-icon">📍</div>
+                <div class="recent-item-info">
+                  <div class="recent-item-name">Pune Airport</div>
+                  <div class="recent-item-corridor">Shivajinagar via Sangamwadi & Nagar Road Corridor</div>
+                </div>
+                <div class="recent-item-metrics">
+                  <span class="recent-pill-dist">8.6 km</span>
+                  <span class="recent-pill-time">18 min</span>
+                  <span class="recent-arrow">➔</span>
+                </div>
+              </div>
+
+              <!-- Recent 2: Viman Nagar -->
+              <div class="recent-item" id="dest-card-viman-nagar" onclick="selectPuneRoute('viman-nagar')">
+                <div class="recent-item-icon">📍</div>
+                <div class="recent-item-info">
+                  <div class="recent-item-name">Viman Nagar</div>
+                  <div class="recent-item-corridor">FC Road via Bund Garden & Koregaon Park North</div>
+                </div>
+                <div class="recent-item-metrics">
+                  <span class="recent-pill-dist">9.2 km</span>
+                  <span class="recent-pill-time">26 min</span>
+                  <span class="recent-arrow">➔</span>
+                </div>
+              </div>
+
+              <!-- Recent 3: Pune Railway Station -->
+              <div class="recent-item" id="dest-card-pune-station" onclick="selectPuneRoute('pune-station')">
+                <div class="recent-item-icon">📍</div>
+                <div class="recent-item-info">
+                  <div class="recent-item-name">Pune Railway Station</div>
+                  <div class="recent-item-corridor">Shivajinagar via Sangam Bridge & Sassoon Rd</div>
+                </div>
+                <div class="recent-item-metrics">
+                  <span class="recent-pill-dist">4.2 km</span>
+                  <span class="recent-pill-time">14 min</span>
+                  <span class="recent-arrow">➔</span>
+                </div>
+              </div>
+
+              <!-- Recent 4: Shivajinagar -->
+              <div class="recent-item" id="dest-card-shivajinagar" onclick="selectPuneRoute('shivajinagar')">
+                <div class="recent-item-icon">📍</div>
+                <div class="recent-item-info">
+                  <div class="recent-item-name">Shivajinagar</div>
+                  <div class="recent-item-corridor">FC Road / JM Road Transit Corridor</div>
+                </div>
+                <div class="recent-item-metrics">
+                  <span class="recent-pill-dist">3.8 km</span>
+                  <span class="recent-pill-time">12 min</span>
+                  <span class="recent-arrow">➔</span>
+                </div>
+              </div>
+
+              <!-- Recent 5: Hinjawadi Phase 1 -->
+              <div class="recent-item" id="dest-card-hinjawadi" onclick="selectPuneRoute('hinjawadi')">
+                <div class="recent-item-icon">📍</div>
+                <div class="recent-item-info">
+                  <div class="recent-item-name">Hinjawadi Phase 1</div>
+                  <div class="recent-item-corridor">Pune University Circle via Aundh & Wakad</div>
+                </div>
+                <div class="recent-item-metrics">
+                  <span class="recent-pill-dist">17.4 km</span>
+                  <span class="recent-pill-time">42 min</span>
+                  <span class="recent-arrow">➔</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="flow-notice-footer">
+            <span class="notice-icon">ℹ</span>
+            <span><strong>PROTOTYPE NOTICE:</strong> Type any destination or select a recent search. Vehicle kinematics driven by benchmark trajectory.</span>
+          </div>
         </div>
 
-        <div class="nav-product-meta">
-          <div class="loc-chip">
-            <span class="loc-pin">📍</span>
-            <span class="loc-label">Current Location:</span>
-            <strong class="loc-val" id="current-location-text">Shivajinagar, Pune, Maharashtra</strong>
+        <!-- ================= SCREEN 2: ROUTE PREVIEW (PROTOTYPE ROUTE) ================= -->
+        <div id="flow-view-preview" class="flow-overlay-card flow-preview-card hidden">
+          <div class="flow-card-header">
+            <div class="flow-badge-wrap">
+              <span class="tag-prototype">PROTOTYPE ROUTE</span>
+              <span class="geo-context-tag">PUNE, MAHARASHTRA</span>
+            </div>
+            <h2 class="flow-card-title" id="preview-route-title">Pune ➔ Pune Airport</h2>
+            <p class="flow-card-desc" id="preview-corridor-desc">
+              Shivajinagar via Sangamwadi & Nagar Road Corridor
+            </p>
           </div>
-          <div class="nav-stepper-mini" role="tablist">
-            <button id="step-btn-dest" class="mini-step active" onclick="setFlowStep('destination')">1. Destination</button>
-            <span class="mini-step-arrow">➔</span>
-            <button id="step-btn-preview" class="mini-step" onclick="setFlowStep('preview')">2. Preview</button>
-            <span class="mini-step-arrow">➔</span>
-            <button id="step-btn-nav" class="mini-step" onclick="setFlowStep('navigating')">3. Live Navigation</button>
+
+          <!-- Route Metrics Strip -->
+          <div class="preview-metrics-strip">
+            <div class="preview-metric-box">
+              <span class="p-met-val" id="preview-dist-val">8.6 <span class="p-met-unit">KM</span></span>
+              <span class="p-met-label">DISTANCE</span>
+            </div>
+            <div class="preview-metric-box">
+              <span class="p-met-val" id="preview-time-val">18 <span class="p-met-unit">MIN</span></span>
+              <span class="p-met-label">ESTIMATED TIME</span>
+            </div>
+            <div class="preview-metric-box">
+              <span class="p-met-val" id="preview-arrival-val">5:42 <span class="p-met-unit">PM</span></span>
+              <span class="p-met-label">ESTIMATED ARRIVAL</span>
+            </div>
+            <div class="preview-metric-box highlight">
+              <span class="p-met-val">IMU READY</span>
+              <span class="p-met-label">INERTIAL BACKUP</span>
+            </div>
+          </div>
+
+          <!-- Route Waypoint Highlights -->
+          <div class="preview-sectors-card">
+            <div class="sector-item">
+              <span class="sector-dot start">●</span>
+              <div class="sector-info">
+                <div class="sector-name" id="preview-sector-1-title">Sector 1: Departure via Sancheti Flyover & Sangamwadi Rd</div>
+                <div class="sector-desc" id="preview-sector-1-desc">Open-sky multi-constellation GNSS lock active. Inertial baseline steady.</div>
+              </div>
+            </div>
+            <div class="sector-item">
+              <span class="sector-dot outage">⚡</span>
+              <div class="sector-info">
+                <div class="sector-name" id="preview-sector-2-title">Sector 2: Nagar Road Underpass Corridor (GNSS Outage Demo)</div>
+                <div class="sector-desc" id="preview-sector-2-desc">Test seamless transition to inertial dead reckoning via SIMULATE GNSS OUTAGE.</div>
+              </div>
+            </div>
+            <div class="sector-item">
+              <span class="sector-dot end">🏁</span>
+              <div class="sector-info">
+                <div class="sector-name" id="preview-sector-3-title">Sector 3: Airport Road Approach & Terminal 1 Loop</div>
+                <div class="sector-desc" id="preview-sector-3-desc">Satellite signal reacquisition and multi-sensor fusion re-engagement.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="preview-actions-row">
+            <button class="btn-start-navigation" onclick="startNavigation()">
+              <span class="btn-start-icon">🚀</span>
+              <span>START NAVIGATION</span>
+            </button>
+            <button class="btn-back-destination" onclick="setFlowStep('destination')">
+              <span>← Change Destination</span>
+            </button>
+          </div>
+
+          <div class="flow-notice-footer">
+            <span class="notice-icon">ℹ</span>
+            <span><strong>PROTOTYPE ROUTE:</strong> Pune route follows OSM road geometry; movement is driven by benchmark trajectory kinematics.</span>
           </div>
         </div>
-      </div>
 
-      <!-- Navigation Cockpit Frame -->
-      <div class="nav-cockpit-frame">
-        
-        <!-- Live Navigation Map Viewport (Occupies main viewport) -->
-        <div class="nav-map-viewport" id="nav-map-viewport">
-          <canvas id="nav-map-canvas"></canvas>
+        <!-- ================= SCREEN 3: LIVE NAVIGATION HUD OVERLAYS ================= -->
 
-          <!-- ================= SCREEN 1: DESTINATION SELECTION (PROTOTYPE) ================= -->
-          <div id="flow-view-destination" class="flow-overlay-card">
-            <div class="flow-card-header">
-              <div class="flow-badge-wrap">
-                <span class="tag-prototype">PROTOTYPE</span>
-                <span class="flow-step-pill">STEP 01 OF 03</span>
-                <span class="geo-context-tag">PUNE, MAHARASHTRA</span>
-              </div>
-              <h2 class="flow-card-title">Where do you want to go in Pune?</h2>
-              <p class="flow-card-desc">
-                Select a prototype destination to preview the route and test continuous dead-reckoning handoff when GNSS is denied in urban tunnels or flyovers.
-              </p>
+        <!-- Top Turn-by-Turn Instruction Card -->
+        <div class="nav-instruction-card" id="nav-instruction-card">
+          <div class="instruction-icon-box" id="instruction-icon">⬆</div>
+          <div class="instruction-text-group">
+            <div class="instruction-dist" id="instruction-dist">In 400m</div>
+            <div class="instruction-title" id="instruction-title">Keep right on Sancheti Hospital Flyover</div>
+            <div class="instruction-sub" id="instruction-sub">Pune Airport Corridor · Continuous Inertial Monitoring Active</div>
+          </div>
+          <span class="maneuver-prototype-tag">PROTOTYPE HUD</span>
+        </div>
+
+        <!-- Live Maneuver Compass Tag (Bottom Right) -->
+        <div class="nav-hud-compass" id="nav-hud-compass">
+          <div class="compass-circle">
+            <span class="compass-n">N</span>
+            <div class="compass-arrow-wrap" id="compass-arrow-wrap">
+              <span class="compass-pointer"></span>
             </div>
+          </div>
+          <div class="compass-readout" id="compass-bearing-readout">028° NNE</div>
+        </div>
 
-            <!-- Search Destination Field -->
-            <div class="flow-search-bar">
-              <span class="search-icon">🔍</span>
-              <input type="text" id="destination-search-input" class="search-input" value="Pune Airport, Lohegaon" placeholder="Search destination in Pune (prototype)..." readonly>
-              <span class="search-tag">PROTOTYPE</span>
+        <!-- Bottom Navigation Dock Card -->
+        <div class="nav-bottom-card" id="nav-bottom-card">
+          
+          <!-- Left: Live Countdown Stats -->
+          <div class="nav-dock-trip">
+            <div class="trip-primary">
+              <span class="trip-time" id="dock-time-remaining">18 min</span>
+              <span class="trip-sep">·</span>
+              <span class="trip-dist" id="dock-dist-remaining">8.6 km</span>
             </div>
-
-            <!-- Pune Destination Options -->
-            <div class="destination-options-grid">
-              
-              <!-- Option 1: Pune Airport (Recommended Demo) -->
-              <div class="dest-option-card active" id="dest-card-pune-airport" onclick="selectPuneRoute('pune-airport')">
-                <div class="dest-card-top">
-                  <div class="dest-card-badge-row">
-                    <span class="badge-recommended">RECOMMENDED DEMO</span>
-                    <span class="tag-prototype">PROTOTYPE</span>
-                  </div>
-                  <span class="dest-card-arrow">➔</span>
-                </div>
-                <div class="dest-card-name">Pune Airport (Lohegaon)</div>
-                <div class="dest-card-corridor">From Shivajinagar via Sangamwadi & Nagar Road Corridor</div>
-                <div class="dest-card-meta">
-                  <span>📏 <strong>8.6 km</strong></span>
-                  <span>⏱ <strong>~24 min</strong></span>
-                  <span class="eta-pill">🏁 <strong>Arrive <span id="card-arrive-airport">12:14 PM</span></strong></span>
-                </div>
-                <button class="btn-select-dest">PREVIEW THIS ROUTE ➔</button>
-              </div>
-
-              <!-- Option 2: Viman Nagar -->
-              <div class="dest-option-card" id="dest-card-viman-nagar" onclick="selectPuneRoute('viman-nagar')">
-                <div class="dest-card-top">
-                  <div class="dest-card-badge-row">
-                    <span class="badge-suburban">TECH CORRIDOR</span>
-                    <span class="tag-prototype">PROTOTYPE</span>
-                  </div>
-                  <span class="dest-card-arrow">➔</span>
-                </div>
-                <div class="dest-card-name">Viman Nagar (Symbiosis Hub)</div>
-                <div class="dest-card-corridor">From FC Road via Bund Garden & Koregaon Park North</div>
-                <div class="dest-card-meta">
-                  <span>📏 <strong>9.2 km</strong></span>
-                  <span>⏱ <strong>~26 min</strong></span>
-                  <span class="eta-pill">🏁 <strong>Arrive <span id="card-arrive-viman">12:16 PM</span></strong></span>
-                </div>
-                <button class="btn-select-dest">PREVIEW THIS ROUTE ➔</button>
-              </div>
-
-              <!-- Option 3: Pune Railway Station -->
-              <div class="dest-option-card" id="dest-card-pune-station" onclick="selectPuneRoute('pune-station')">
-                <div class="dest-card-top">
-                  <div class="dest-card-badge-row">
-                    <span class="badge-suburban">CITY CENTRAL</span>
-                    <span class="tag-prototype">PROTOTYPE</span>
-                  </div>
-                  <span class="dest-card-arrow">➔</span>
-                </div>
-                <div class="dest-card-name">Pune Railway Station</div>
-                <div class="dest-card-corridor">From Shivajinagar via Sangam Bridge & Sassoon Rd</div>
-                <div class="dest-card-meta">
-                  <span>📏 <strong>4.2 km</strong></span>
-                  <span>⏱ <strong>~14 min</strong></span>
-                  <span class="eta-pill">🏁 <strong>Arrive <span id="card-arrive-station">12:04 PM</span></strong></span>
-                </div>
-                <button class="btn-select-dest">PREVIEW THIS ROUTE ➔</button>
-              </div>
-
-              <!-- Option 4: Hinjawadi IT Park -->
-              <div class="dest-option-card" id="dest-card-hinjawadi" onclick="selectPuneRoute('hinjawadi')">
-                <div class="dest-card-top">
-                  <div class="dest-card-badge-row">
-                    <span class="badge-suburban">EXPRESSWAY LINK</span>
-                    <span class="tag-prototype">PROTOTYPE</span>
-                  </div>
-                  <span class="dest-card-arrow">➔</span>
-                </div>
-                <div class="dest-card-name">Hinjawadi IT Park (Phase 1)</div>
-                <div class="dest-card-corridor">From Pune University Circle via Aundh & Wakad Flyover</div>
-                <div class="dest-card-meta">
-                  <span>📏 <strong>17.4 km</strong></span>
-                  <span>⏱ <strong>~42 min</strong></span>
-                  <span class="eta-pill">🏁 <strong>Arrive <span id="card-arrive-hinjawadi">12:32 PM</span></strong></span>
-                </div>
-                <button class="btn-select-dest">PREVIEW THIS ROUTE ➔</button>
-              </div>
-
-            </div>
-
-            <div class="flow-notice-footer">
-              <span class="notice-icon">ℹ</span>
-              <span><strong>PROTOTYPE NOTICE:</strong> Pune destinations and ETAs are illustrative prototypes for testing dead-reckoning handoff. Vehicle motion is driven by verified benchmark trajectory playback.</span>
+            <div class="trip-secondary">
+              <span class="trip-arrival">Arrive <strong id="dock-arrive-time">5:42 PM</strong></span>
+              <span class="trip-sep">·</span>
+              <span class="trip-travelled"><span id="dock-dist-travelled">0.0</span> km done</span>
             </div>
           </div>
 
-          <!-- ================= SCREEN 2: ROUTE PREVIEW (PROTOTYPE ROUTE) ================= -->
-          <div id="flow-view-preview" class="flow-overlay-card hidden">
-            <div class="flow-card-header">
-              <div class="flow-badge-wrap">
-                <span class="tag-prototype">PROTOTYPE ROUTE</span>
-                <span class="flow-step-pill">STEP 02 OF 03</span>
-                <span class="geo-context-tag">PUNE, MAHARASHTRA</span>
-              </div>
-              <h2 class="flow-card-title" id="preview-route-title">Shivajinagar ➔ Pune Airport (Lohegaon)</h2>
-              <p class="flow-card-desc" id="preview-corridor-desc">
-                Corridor overview via Sangamwadi & Nagar Road. Highlights open-sky satellite tracking and GNSS-denied underpass handoff.
-              </p>
+          <!-- Center: Speedometer & Navigation Mode -->
+          <div class="nav-dock-telemetry">
+            <div class="dock-speed-block">
+              <span class="speed-value" id="nav-speed-display">0.0</span>
+              <span class="speed-unit">KM/H</span>
             </div>
-
-            <!-- Route Metrics Strip -->
-            <div class="preview-metrics-strip">
-              <div class="preview-metric-box">
-                <span class="p-met-label">TOTAL DISTANCE</span>
-                <span class="p-met-val" id="preview-dist-val">8.6 <span class="p-met-unit">KM</span></span>
-                <span class="p-met-sub">Route Corridor</span>
+            <div class="dock-mode-block">
+              <div class="dock-mode-row">
+                <span class="hud-mode-dot" id="hud-mode-dot"></span>
+                <span class="dock-mode-name" id="hud-mode-title">GNSS AVAILABLE</span>
               </div>
-              <div class="preview-metric-box">
-                <span class="p-met-label">ESTIMATED TIME</span>
-                <span class="p-met-val" id="preview-time-val">~24 <span class="p-met-unit">MIN</span></span>
-                <span class="p-met-sub">Expected Duration</span>
-              </div>
-              <div class="preview-metric-box">
-                <span class="p-met-label">ESTIMATED ARRIVAL</span>
-                <span class="p-met-val" id="preview-arrival-val">12:14 <span class="p-met-unit">PM</span></span>
-                <span class="p-met-sub">Dynamic ETA</span>
-              </div>
-              <div class="preview-metric-box highlight">
-                <span class="p-met-label">INERTIAL BACKUP</span>
-                <span class="p-met-val">10 HZ IMU READY</span>
-                <span class="p-met-sub">Phase 3 Leveled</span>
-              </div>
-            </div>
-
-            <!-- Route Waypoint Highlights -->
-            <div class="preview-sectors-card">
-              <div class="sector-item">
-                <span class="sector-dot start">●</span>
-                <div class="sector-info">
-                  <div class="sector-name" id="preview-sector-1-title">Sector 1: Departure via Sancheti Flyover & Sangamwadi Rd</div>
-                  <div class="sector-desc" id="preview-sector-1-desc">Open-sky multi-constellation GNSS lock active. Inertial baseline steady.</div>
-                </div>
-              </div>
-              <div class="sector-item">
-                <span class="sector-dot outage">⚡</span>
-                <div class="sector-info">
-                  <div class="sector-name" id="preview-sector-2-title">Sector 2: Nagar Road Underpass Corridor (GNSS Outage Demo)</div>
-                  <div class="sector-desc" id="preview-sector-2-desc">Test seamless transition to inertial dead reckoning via SIMULATE GNSS OUTAGE.</div>
-                </div>
-              </div>
-              <div class="sector-item">
-                <span class="sector-dot end">🏁</span>
-                <div class="sector-info">
-                  <div class="sector-name" id="preview-sector-3-title">Sector 3: Airport Road Approach & Terminal 1 Loop</div>
-                  <div class="sector-desc" id="preview-sector-3-desc">Satellite signal reacquisition and multi-sensor fusion re-engagement.</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="preview-actions-row">
-              <button class="btn-start-navigation" onclick="startNavigation()">
-                <span class="btn-start-icon">🚀</span>
-                <span>START NAVIGATION</span>
-              </button>
-              <button class="btn-back-destination" onclick="setFlowStep('destination')">
-                <span>← Change Destination</span>
-              </button>
-            </div>
-
-            <div class="flow-notice-footer">
-              <span class="notice-icon">ℹ</span>
-              <span><strong>PROTOTYPE NOTICE:</strong> Pune route geometry is an illustrative navigation prototype visually driven by benchmark trajectory kinematics.</span>
+              <div class="hud-outage-alert hidden" id="hud-outage-alert">SIMULATED OUTAGE — DEMONSTRATION</div>
             </div>
           </div>
 
-          <!-- ================= SCREEN 3: LIVE NAVIGATION HUD OVERLAYS ================= -->
+          <!-- Right: Outage Toggle & Exit -->
+          <div class="nav-dock-actions">
+            <button id="btn-dock-outage" class="btn-dock-outage" onclick="toggleGnssOutage()">
+              <span class="dock-outage-bolt">⚡</span>
+              <span id="dock-outage-text">SIMULATE GNSS OUTAGE</span>
+            </button>
 
-          <!-- Top Turn-by-Turn Instruction Card -->
-          <div class="nav-instruction-card" id="nav-instruction-card">
-            <div class="instruction-icon-box" id="instruction-icon">⬆</div>
-            <div class="instruction-text-group">
-              <div class="instruction-dist" id="instruction-dist">In 400m</div>
-              <div class="instruction-title" id="instruction-title">Keep right on Sancheti Hospital Flyover</div>
-              <div class="instruction-sub" id="instruction-sub">Pune Airport Corridor · Continuous Inertial Monitoring Active</div>
-            </div>
-            <span class="maneuver-prototype-tag">PROTOTYPE HUD</span>
+            <button class="btn-dock-exit" onclick="exitNavigation()" title="Exit navigation and return to destination search">
+              ✕ Exit
+            </button>
           </div>
 
-          <!-- Live Maneuver Compass Tag (Bottom Right) -->
-          <div class="nav-hud-compass" id="nav-hud-compass">
-            <div class="compass-circle">
-              <span class="compass-n">N</span>
-              <div class="compass-arrow-wrap" id="compass-arrow-wrap">
-                <span class="compass-pointer"></span>
-              </div>
-            </div>
-            <div class="compass-readout" id="compass-bearing-readout">028° NNE</div>
-          </div>
+        </div>
 
-          <!-- Bottom Navigation Dock Card -->
-          <div class="nav-bottom-card" id="nav-bottom-card">
-            
-            <!-- Left: Live Countdown Stats -->
-            <div class="nav-dock-trip">
-              <div class="trip-primary">
-                <span class="trip-time" id="dock-time-remaining">24 min</span>
-                <span class="trip-sep">·</span>
-                <span class="trip-dist" id="dock-dist-remaining">8.6 km</span>
-              </div>
-              <div class="trip-secondary">
-                <span class="trip-arrival">Arrive <strong id="dock-arrive-time">12:14 PM</strong></span>
-                <span class="trip-sep">·</span>
-                <span class="trip-travelled"><span id="dock-dist-travelled">0.0</span> km done</span>
-              </div>
-            </div>
-
-            <!-- Center: Speedometer & Navigation Mode -->
-            <div class="nav-dock-telemetry">
-              <div class="dock-speed-block">
-                <span class="speed-value" id="nav-speed-display">0.0</span>
-                <span class="speed-unit">KM/H</span>
-              </div>
-              <div class="dock-mode-block">
-                <div class="dock-mode-row">
-                  <span class="hud-mode-dot" id="hud-mode-dot"></span>
-                  <span class="dock-mode-name" id="hud-mode-title">GNSS + INS</span>
-                </div>
-                <div class="hud-outage-alert hidden" id="hud-outage-alert">SIMULATED OUTAGE — DEMONSTRATION</div>
-              </div>
-            </div>
-
-            <!-- Right: Outage Toggle, Controls & Exit -->
-            <div class="nav-dock-actions">
-              <button id="btn-dock-outage" class="btn-dock-outage" onclick="toggleGnssOutage()">
-                <span class="dock-outage-bolt">⚡</span>
-                <span id="dock-outage-text">SIMULATE GNSS OUTAGE</span>
-              </button>
-              
-              <button id="btn-dock-pause" class="btn-dock-icon" onclick="togglePlayback()" title="Pause / Resume vehicle motion">
-                <span id="dock-pause-icon">⏸</span>
-              </button>
-
-              <button class="btn-dock-exit" onclick="exitNavigation()" title="Exit navigation and return to destination search">
-                ✕ Exit
-              </button>
-            </div>
-
-          </div>
-
-          <!-- Destination Reached Completion Card -->
-          <div id="nav-arrival-card" class="nav-arrival-card hidden">
-            <div class="arrival-icon">🏁</div>
-            <div class="arrival-content">
-              <div class="arrival-badge">DESTINATION REACHED</div>
-              <h3 class="arrival-title" id="arrival-title">You have arrived at Pune Airport Terminal 1</h3>
-              <p class="arrival-desc" id="arrival-desc">
-                Trip completed successfully. Inertial dead reckoning maintained position continuity through simulated GNSS-denied sectors.
-              </p>
-              <div class="arrival-actions">
-                <button class="btn-arrival-replay" onclick="replayNavigation()">↺ Replay Navigation</button>
-                <button class="btn-arrival-new" onclick="setFlowStep('destination')">🗺 Select New Destination</button>
-                <button class="btn-arrival-evidence" onclick="switchAppTab('evidence')">📊 View System Evidence ➔</button>
-              </div>
+        <!-- Destination Reached Completion Card -->
+        <div id="nav-arrival-card" class="nav-arrival-card hidden">
+          <div class="arrival-icon">✨</div>
+          <div class="arrival-content">
+            <div class="arrival-badge">You have arrived</div>
+            <h3 class="arrival-title" id="arrival-title">You have arrived at Pune Airport Terminal 1</h3>
+            <p class="arrival-desc" id="arrival-desc">
+              Trip completed successfully. Inertial dead reckoning maintained position continuity through simulated GNSS-denied sectors.
+            </p>
+            <div class="arrival-actions">
+              <button class="btn-arrival-new" onclick="setFlowStep('destination')">🗺 Select New Destination</button>
+              <button class="btn-arrival-evidence" onclick="switchAppTab('evidence')">📊 View System Evidence ➔</button>
             </div>
           </div>
+        </div>
 
-        </div> <!-- /nav-map-viewport -->
-
-      </div> <!-- /nav-cockpit-frame -->
+      </div> <!-- /nav-map-viewport -->
 
     </div> <!-- /view-navigation -->
 
@@ -689,7 +654,7 @@
 
   <footer class="dashboard-footer">
     <div class="footer-left">
-      <span class="footer-brand">IDR-NAV</span>
+      <span class="footer-brand">UnLost</span>
       <span class="footer-desc">Intelligent Dead-Reckoning Navigation for GNSS-Denied Environments</span>
     </div>
     <div class="footer-center">
@@ -700,6 +665,8 @@
     </div>
   </footer>
 
+  <!-- Leaflet Mapping Library (Local Zero-Latency Bundle) -->
+  <script src="lib/leaflet.js"></script>
   <!-- Real Static Pre-generated Data (Zero CORS, Zero network latency) -->
   <script src="data/dashboard_data.js"></script>
   <!-- Main Application Logic -->

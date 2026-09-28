@@ -1,10 +1,10 @@
 /**
- * IDR-NAV — Primary Navigation Product & Engineering Dashboard Logic
+ * UnLost — Primary Navigation Product & Engineering Dashboard Logic
  * Pure Vanilla JavaScript — Zero build step, zero CORS risk.
  *
  * Primary Product Flow:
  *   1. Destination Selection (Pune, Maharashtra, India)
- *   2. Route Preview (~24 min, 8.6 km, Arrive 12:14 PM)
+ *   2. Route Preview (18 min, 8.6 km, Arrive 5:42 PM)
  *   3. Live Navigation Simulation:
  *      - Moving 3D Navigation Arrow with directional rotation & camera tracking
  *      - Live HUD turn-by-turn guidance and dynamic dock countdowns
@@ -21,19 +21,34 @@
   'use strict';
 
   // ============================================================================
-  // 1. PROTOTYPE PUNE ROUTES CONFIGURATION
+  // 1. PROTOTYPE PUNE ROUTES CONFIGURATION (REAL PUNE OSM ROAD CORRIDORS)
   // ============================================================================
   const PUNE_ROUTES = {
     'pune-airport': {
       id: 'pune-airport',
-      name: 'Pune Airport (Lohegaon)',
-      departure: 'Shivajinagar, Pune',
-      corridor: 'From Shivajinagar via Sangamwadi & Nagar Road Corridor',
+      name: 'Pune Airport',
+      departure: 'Pune',
+      corridor: 'Shivajinagar via Sangamwadi & Nagar Road Corridor',
       distKm: 8.6,
-      durationMin: 24,
-      arrivalDeterministic: '12:14 PM',
+      durationMin: 18,
+      arrivalDeterministic: '5:42 PM',
       datasetSource: 'S-Vta1a',
       arrivalName: 'Pune Airport Terminal 1',
+      roadWaypoints: [
+        [18.5314, 73.8446], // Shivajinagar Junction / Sancheti Chowk
+        [18.5328, 73.8505], // Sancheti Flyover ramp onto Sangamwadi Rd
+        [18.5358, 73.8585], // Sangamwadi Road corridor along Mula River
+        [18.5390, 73.8680], // Sangamwadi BRTS corridor
+        [18.5435, 73.8765], // Mula River Bridge crossing
+        [18.5490, 73.8825], // Yerwada Parnakuti junction
+        [18.5528, 73.8872], // Pune-Ahmednagar (Nagar) Road
+        [18.5558, 73.8950], // Nagar Road Yerwada section
+        [18.5585, 73.9018], // Gunjan Chowk (Turn onto Airport Road)
+        [18.5632, 73.9068], // Airport Road, Tingre Nagar
+        [18.5690, 73.9115], // Airport Road past Commerzone IT Park
+        [18.5745, 73.9160], // Lohegaon Concourse loop approach
+        [18.5804, 73.9200]  // Pune Airport Terminal 1 Departure
+      ],
       sectors: [
         {
           title: 'Sector 1: Departure via Sancheti Flyover & Sangamwadi Rd',
@@ -60,14 +75,27 @@
     },
     'viman-nagar': {
       id: 'viman-nagar',
-      name: 'Viman Nagar (Symbiosis Hub)',
-      departure: 'FC Road, Shivajinagar',
-      corridor: 'From FC Road via Bund Garden & Koregaon Park North',
+      name: 'Viman Nagar',
+      departure: 'Pune',
+      corridor: 'FC Road via Bund Garden & Koregaon Park North',
       distKm: 9.2,
       durationMin: 26,
-      arrivalDeterministic: '12:16 PM',
+      arrivalDeterministic: '5:50 PM',
       datasetSource: 'S-Vta2',
       arrivalName: 'Viman Nagar Symbiosis Hub',
+      roadWaypoints: [
+        [18.5240, 73.8415], // FC Road, Shivajinagar
+        [18.5290, 73.8440], // FC Road to Modern College
+        [18.5315, 73.8550], // Sancheti / COEP / Sangam Bridge
+        [18.5300, 73.8680], // Sassoon Road past station
+        [18.5365, 73.8820], // Bund Garden Road
+        [18.5410, 73.8910], // Bund Garden Bridge over Mula-Mutha
+        [18.5460, 73.8990], // Koregaon Park North Main Road
+        [18.5520, 73.9060], // Central Avenue, Kalyani Nagar
+        [18.5580, 73.9110], // Nagar Road arterial cross
+        [18.5640, 73.9135], // Symbiosis Road
+        [18.5679, 73.9143]  // Viman Nagar Symbiosis Hub
+      ],
       sectors: [
         {
           title: 'Sector 1: FC Road onto Bund Garden Bridge',
@@ -93,13 +121,21 @@
     'pune-station': {
       id: 'pune-station',
       name: 'Pune Railway Station',
-      departure: 'Shivajinagar, Pune',
-      corridor: 'From Shivajinagar via Sangam Bridge & Sassoon Rd',
+      departure: 'Pune',
+      corridor: 'Shivajinagar via Sangam Bridge & Sassoon Rd',
       distKm: 4.2,
       durationMin: 14,
-      arrivalDeterministic: '12:04 PM',
+      arrivalDeterministic: '5:38 PM',
       datasetSource: 'S-Vta1a',
       arrivalName: 'Pune Central Railway Station',
+      roadWaypoints: [
+        [18.5314, 73.8446], // Shivajinagar Central
+        [18.5325, 73.8510], // Sancheti Chowk
+        [18.5305, 73.8580], // COEP Flyover
+        [18.5295, 73.8640], // Sangam Bridge Overpass
+        [18.5270, 73.8695], // Sassoon Hospital Road
+        [18.5284, 73.8744]  // Pune Central Railway Station Platform 1
+      ],
       sectors: [
         {
           title: 'Sector 1: Shivajinagar Court Flyover Approach',
@@ -122,16 +158,66 @@
         { pct: 0.98, dist: 'Arrived', title: 'You have arrived at Pune Railway Station', sub: 'Platform 1 Portico · Trip Complete', icon: '🏁' }
       ]
     },
+    'shivajinagar': {
+      id: 'shivajinagar',
+      name: 'Shivajinagar',
+      departure: 'Pune',
+      corridor: 'FC Road / JM Road Transit Corridor',
+      distKm: 3.8,
+      durationMin: 12,
+      arrivalDeterministic: '5:36 PM',
+      datasetSource: 'S-Vta1a',
+      arrivalName: 'Shivajinagar Central Hub',
+      roadWaypoints: [
+        [18.5205, 73.8400], // FC Road Goodluck Chowk
+        [18.5245, 73.8420], // FC Road Dnyaneshwar Paduka Chowk
+        [18.5285, 73.8465], // Modern College Rd onto JM Road
+        [18.5305, 73.8460], // Balgandharva Ranga Mandir, JM Road
+        [18.5314, 73.8446]  // Shivajinagar Central Hub
+      ],
+      sectors: [
+        {
+          title: 'Sector 1: FC Road Arterial Corridor',
+          desc: 'Dense commercial link with high GNSS satellite visibility.'
+        },
+        {
+          title: 'Sector 2: Metro Viaduct Underpass (GNSS Outage Demo)',
+          desc: 'Elevated transit overhead structure GNSS denial simulation.'
+        },
+        {
+          title: 'Sector 3: Shivajinagar Terminal Approach',
+          desc: 'Satellite signal reacquisition and final terminal arrival.'
+        }
+      ],
+      instructionCues: [
+        { pct: 0.00, dist: 'In 300m', title: 'Head north on Fergusson College Road', sub: 'Shivajinagar Corridor · Inertial Monitoring Active', icon: '⬆' },
+        { pct: 0.30, dist: 'In 600m', title: 'Turn right onto Jangali Maharaj Road', sub: 'Approaching Transit Link', icon: '↗' },
+        { pct: 0.60, dist: 'In 400m', title: 'Pass beneath Metro Viaduct Underpass', sub: 'Simulated Outage Demonstration Zone', icon: '⬆' },
+        { pct: 0.85, dist: 'In 250m', title: 'Turn left into Shivajinagar Hub', sub: 'GNSS Signal Reacquired', icon: '↰' },
+        { pct: 0.98, dist: 'Arrived', title: 'You have arrived at Shivajinagar', sub: 'Central Terminal · Trip Complete', icon: '🏁' }
+      ]
+    },
     'hinjawadi': {
       id: 'hinjawadi',
-      name: 'Hinjawadi IT Park (Phase 1)',
-      departure: 'Pune University Circle',
-      corridor: 'From Pune University Circle via Aundh & Wakad Flyover',
+      name: 'Hinjawadi Phase 1',
+      departure: 'Pune',
+      corridor: 'Pune University Circle via Aundh & Wakad',
       distKm: 17.4,
       durationMin: 42,
-      arrivalDeterministic: '12:32 PM',
+      arrivalDeterministic: '6:06 PM',
       datasetSource: 'S-Vta2',
       arrivalName: 'Hinjawadi Phase 1 Campus',
+      roadWaypoints: [
+        [18.5314, 73.8446], // Shivajinagar
+        [18.5365, 73.8370], // Ganeshkhind Road
+        [18.5450, 73.8290], // Pune University Circle
+        [18.5580, 73.8110], // Aundh Road
+        [18.5645, 73.8050], // Bremen Chowk, Aundh
+        [18.5710, 73.7930], // Rajiv Gandhi Bridge over Mula River
+        [18.5830, 73.7680], // Wakad Bypass Flyover
+        [18.5910, 73.7490], // Hinjawadi Flyover onto Phase 1 Spine
+        [18.5913, 73.7389]  // Hinjawadi IT Park Phase 1 Circle
+      ],
       sectors: [
         {
           title: 'Sector 1: University Circle onto Aundh Road',
@@ -156,6 +242,139 @@
     }
   };
 
+  // Pre-configured road corridors for typed Pune search queries
+  const PUNE_TYPED_PRESETS = {
+    'kothrud': {
+      name: 'Kothrud (Chandani Chowk)',
+      corridor: 'From Shivajinagar via FC Road & Karve Road Arterial',
+      distKm: 6.8,
+      durationMin: 18,
+      arrivalName: 'Kothrud Chandani Chowk',
+      roadWaypoints: [
+        [18.5314, 73.8446],
+        [18.5255, 73.8415],
+        [18.5180, 73.8370],
+        [18.5120, 73.8260],
+        [18.5074, 73.8077]
+      ]
+    },
+    'hadapsar': {
+      name: 'Hadapsar (Magarpatta City)',
+      corridor: 'From Shivajinagar via Pune Station & Solapur Road',
+      distKm: 10.4,
+      durationMin: 28,
+      arrivalName: 'Magarpatta Cybercity Hub',
+      roadWaypoints: [
+        [18.5314, 73.8446],
+        [18.5300, 73.8680],
+        [18.5200, 73.8850],
+        [18.5130, 73.9100],
+        [18.5089, 73.9259]
+      ]
+    },
+    'mumbai': {
+      name: 'Mumbai Expressway Corridor',
+      corridor: 'From Shivajinagar via Old Pune-Mumbai Highway',
+      distKm: 22.0,
+      durationMin: 45,
+      arrivalName: 'Dehu Road Expressway Toll Plaza',
+      roadWaypoints: [
+        [18.5314, 73.8446],
+        [18.5450, 73.8290],
+        [18.5600, 73.8090],
+        [18.5950, 73.7650],
+        [18.6350, 73.7200],
+        [18.6750, 73.6800]
+      ]
+    },
+    'swargate': {
+      name: 'Swargate Bus Terminal',
+      corridor: 'From Shivajinagar via Shivaji Road / Bajirao Road',
+      distKm: 4.8,
+      durationMin: 16,
+      arrivalName: 'Swargate Central Bus Station',
+      roadWaypoints: [
+        [18.5314, 73.8446],
+        [18.5260, 73.8510],
+        [18.5180, 73.8550],
+        [18.5090, 73.8590],
+        [18.5018, 73.8636]
+      ]
+    },
+    'baner': {
+      name: 'Baner High Street',
+      corridor: 'From Shivajinagar via University Road & Baner Road',
+      distKm: 9.6,
+      durationMin: 25,
+      arrivalName: 'Baner High Street Commercial Hub',
+      roadWaypoints: [
+        [18.5314, 73.8446],
+        [18.5365, 73.8370],
+        [18.5450, 73.8290],
+        [18.5520, 73.8150],
+        [18.5590, 73.7868]
+      ]
+    }
+  };
+
+  // ============================================================================
+  // GEODESY & DENSE ROAD PATH INTERPOLATION
+  // ============================================================================
+  function haversineM(lat1, lon1, lat2, lon2) {
+    const R = 6371000;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  function bearingDeg(lat1, lon1, lat2, lon2) {
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const y = Math.sin(dLon) * Math.cos(lat2 * Math.PI / 180);
+    const x = Math.cos(lat1 * Math.PI / 180) * Math.sin(lat2 * Math.PI / 180) -
+              Math.sin(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.cos(dLon);
+    return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+  }
+
+  function generateDenseRoute(waypoints, totalPoints) {
+    totalPoints = totalPoints || 1000;
+    if (!waypoints || waypoints.length < 2) return [];
+
+    const segDists = [];
+    let totalDist = 0;
+    for (let i = 0; i < waypoints.length - 1; i++) {
+      const d = haversineM(waypoints[i][0], waypoints[i][1], waypoints[i + 1][0], waypoints[i + 1][1]);
+      segDists.push(d);
+      totalDist += d;
+    }
+    if (totalDist <= 0) totalDist = 1;
+
+    const dense = [];
+    for (let i = 0; i < totalPoints; i++) {
+      const targetDist = (i / (totalPoints - 1)) * totalDist;
+      let acc = 0;
+      let segIdx = 0;
+      for (let s = 0; s < segDists.length; s++) {
+        if (acc + segDists[s] >= targetDist || s === segDists.length - 1) {
+          segIdx = s;
+          break;
+        }
+        acc += segDists[s];
+      }
+      const segLen = segDists[segIdx] || 1;
+      const ratio = Math.max(0, Math.min(1, (targetDist - acc) / segLen));
+      const p1 = waypoints[segIdx];
+      const p2 = waypoints[segIdx + 1] || p1;
+      const lat = p1[0] + ratio * (p2[0] - p1[0]);
+      const lng = p1[1] + ratio * (p2[1] - p1[1]);
+      const heading = bearingDeg(p1[0], p1[1], p2[0], p2[1]);
+      dense.push({ lat: lat, lng: lng, heading: heading });
+    }
+    return dense;
+  }
+
   // ============================================================================
   // 2. GLOBAL APPLICATION STATE
   // ============================================================================
@@ -179,13 +398,25 @@
     flowStep: 'destination', // 'destination' | 'preview' | 'navigating'
     index: 0,
     isPlaying: false,
-    speedMultiplier: 2,
     playTimer: null,
     outageStartIdx: -1,
     isArrived: false
   };
 
   let dbData = null;
+
+  // Leaflet map instance and managed layer references
+  let leafletMap = null;
+  let mapInitialized = false;
+  let currentDenseRoute = [];
+  let currentDenseCoords = [];
+  let routeCasingLayer = null;
+  let routeAheadLayer = null;
+  let routePastLayer = null;
+  let vehicleMarker = null;
+  let startMarker = null;
+  let destMarker = null;
+  let currentLocMarker = null;
 
   // ============================================================================
   // 3. CACHED DOM ELEMENTS
@@ -216,17 +447,20 @@
     stepBtnDest: document.getElementById('step-btn-dest'),
     stepBtnPreview: document.getElementById('step-btn-preview'),
     stepBtnNav: document.getElementById('step-btn-nav'),
-    canvasNavMap: document.getElementById('nav-map-canvas'),
+    navOsmMap: document.getElementById('nav-osm-map'),
     navMapViewport: document.getElementById('nav-map-viewport'),
 
     // Flow Overlays
     flowViewDest: document.getElementById('flow-view-destination'),
     flowViewPreview: document.getElementById('flow-view-preview'),
 
-    // Destination Cards
+    // Destination Cards & Search
+    destSearchInput: document.getElementById('destination-search-input'),
+    btnSearchGo: document.getElementById('btn-search-go'),
     destCardAirport: document.getElementById('dest-card-pune-airport'),
     destCardViman: document.getElementById('dest-card-viman-nagar'),
     destCardStation: document.getElementById('dest-card-pune-station'),
+    destCardShivajinagar: document.getElementById('dest-card-shivajinagar'),
     destCardHinjawadi: document.getElementById('dest-card-hinjawadi'),
 
     // Preview Elements
@@ -263,8 +497,6 @@
     hudOutageAlert: document.getElementById('hud-outage-alert'),
     btnDockOutage: document.getElementById('btn-dock-outage'),
     dockOutageText: document.getElementById('dock-outage-text'),
-    btnDockPause: document.getElementById('btn-dock-pause'),
-    dockPauseIcon: document.getElementById('dock-pause-icon'),
 
     // Destination Reached Card
     navArrivalCard: document.getElementById('nav-arrival-card'),
@@ -318,10 +550,10 @@
         });
     }
 
-    // Resize handling for canvases
+    // Resize handling: Leaflet map & Evidence canvases
     window.addEventListener('resize', debounce(() => {
       if (state.activeTab === 'navigation') {
-        renderNavMap();
+        if (leafletMap) leafletMap.invalidateSize();
       } else if (state.activeTab === 'evidence') {
         renderTrajectory();
         renderDriftChart();
@@ -334,8 +566,26 @@
   function setupApplication() {
     // 1. Navigation is the primary default experience
     switchAppTab('navigation');
+    initMap();
     selectPuneRoute('pune-airport');
     setFlowStep('destination');
+
+    // Attach search keydown listener
+    const searchInput = document.getElementById('destination-search-input');
+    if (searchInput) {
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          submitDestinationSearch();
+        }
+      });
+    }
+
+    // Global resize listener for responsive full-screen map
+    window.addEventListener('resize', () => {
+      if (leafletMap && state.activeTab === 'navigation') {
+        leafletMap.invalidateSize();
+      }
+    });
 
     // 2. Prepare System Evidence data
     updateMetricsUI();
@@ -348,6 +598,7 @@
   // ============================================================================
   window.switchAppTab = function (tabName) {
     state.activeTab = tabName;
+    document.body.className = 'tab-' + tabName;
 
     // Manage tab buttons
     if (dom.tabNavBtn) dom.tabNavBtn.classList.toggle('active', tabName === 'navigation');
@@ -370,7 +621,13 @@
 
     // Re-render active view
     if (tabName === 'navigation') {
-      setTimeout(() => renderNavMap(), 20);
+      setTimeout(() => {
+        if (!mapInitialized) initMap();
+        if (leafletMap) {
+          leafletMap.invalidateSize();
+          renderNavMap();
+        }
+      }, 50);
     } else if (tabName === 'evidence') {
       setTimeout(() => {
         renderTrajectory();
@@ -380,30 +637,177 @@
   };
 
   // ============================================================================
-  // 6. PRIMARY NAVIGATION PRODUCT FLOW: DESTINATION -> PREVIEW -> NAVIGATION
+  // 6. LEAFLET MAP INITIALIZATION & INTERACTIVE OSM MANAGEMENT
+  // ============================================================================
+  function initMap() {
+    if (mapInitialized || typeof L === 'undefined') return;
+    const container = document.getElementById('nav-osm-map');
+    if (!container) return;
+
+    try {
+      leafletMap = L.map('nav-osm-map', {
+        zoomControl: true,
+        attributionControl: true,
+        maxZoom: 19,
+        minZoom: 5
+      }).setView([18.5204, 73.8567], 13);
+
+      // Real OpenStreetMap Standard Tile Layer
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors'
+      }).addTo(leafletMap);
+
+      if (leafletMap.zoomControl) {
+        leafletMap.zoomControl.setPosition('topright');
+      }
+
+      // Outer road casing polyline for crisp contrast on OSM tiles
+      routeCasingLayer = L.polyline([], {
+        color: '#FFFFFF',
+        weight: 9,
+        opacity: 0.85,
+        lineJoin: 'round',
+        lineCap: 'round'
+      }).addTo(leafletMap);
+
+      // Active road route (ahead of vehicle) — Sunset Orange
+      routeAheadLayer = L.polyline([], {
+        color: '#FF5841',
+        weight: 6,
+        opacity: 0.95,
+        lineJoin: 'round',
+        lineCap: 'round'
+      }).addTo(leafletMap);
+
+      // Completed road route (behind vehicle) — Soft slate
+      routePastLayer = L.polyline([], {
+        color: '#CBD5E1',
+        weight: 5,
+        opacity: 0.8,
+        lineJoin: 'round',
+        lineCap: 'round'
+      }).addTo(leafletMap);
+
+      // Single Primary Vehicle Arrow Marker (Sunset Orange #FF5841)
+      const vehicleHtml = `
+        <div class="nav-vehicle-marker" id="nav-vehicle-marker">
+          <div class="nav-vehicle-arrow-wrap" id="nav-vehicle-arrow-wrap" style="transform: rotate(0deg);">
+            <svg viewBox="0 0 36 36" width="36" height="36" class="nav-arrow-svg">
+              <defs>
+                <filter id="nav-arrow-shadow" x="-30%" y="-30%" width="160%" height="160%">
+                  <feDropShadow dx="0" dy="2.5" stdDeviation="2.5" flood-color="#111827" flood-opacity="0.35"/>
+                </filter>
+              </defs>
+              <path d="M 18 3 L 30 29 L 18 23 L 6 29 Z" 
+                    fill="#FF5841" 
+                    stroke="#FFFFFF" 
+                    stroke-width="2.5" 
+                    stroke-linejoin="round"
+                    filter="url(#nav-arrow-shadow)" />
+              <path d="M 18 7 L 18 22" stroke="rgba(255,255,255,0.85)" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </div>
+      `;
+      const vehicleIcon = L.divIcon({
+        className: 'custom-vehicle-div-icon',
+        html: vehicleHtml,
+        iconSize: [36, 36],
+        iconAnchor: [18, 18]
+      });
+      vehicleMarker = L.marker([18.5204, 73.8567], { icon: vehicleIcon, zIndexOffset: 1000 });
+
+      // Start Origin Pin Marker
+      const startHtml = `<div class="nav-pin-start" title="Departure Origin"><div class="start-pin-core"></div></div>`;
+      const startIcon = L.divIcon({
+        className: 'custom-start-div-icon',
+        html: startHtml,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10]
+      });
+      startMarker = L.marker([18.5314, 73.8446], { icon: startIcon, zIndexOffset: 500 });
+
+      // Destination Pin Marker — Red-Violet #C53678
+      const destHtml = `
+        <div class="nav-pin-dest" title="Destination">
+          <svg viewBox="0 0 32 40" width="32" height="40" class="dest-pin-svg">
+            <defs>
+              <filter id="dest-pin-shadow" x="-30%" y="-20%" width="160%" height="150%">
+                <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#111827" flood-opacity="0.35"/>
+              </filter>
+            </defs>
+            <path d="M 16 0 C 7.16 0 0 7.16 0 16 C 0 26 16 40 16 40 C 16 40 32 26 32 16 C 32 7.16 24.84 0 16 0 Z" 
+                  fill="#C53678" 
+                  stroke="#FFFFFF" 
+                  stroke-width="2" 
+                  filter="url(#dest-pin-shadow)"/>
+            <circle cx="16" cy="15" r="5.5" fill="#FFFFFF"/>
+            <circle cx="16" cy="15" r="2.5" fill="#C53678"/>
+          </svg>
+        </div>
+      `;
+      const destIcon = L.divIcon({
+        className: 'custom-dest-div-icon',
+        html: destHtml,
+        iconSize: [32, 40],
+        iconAnchor: [16, 38]
+      });
+      destMarker = L.marker([18.5804, 73.9200], { icon: destIcon, zIndexOffset: 500 });
+
+      // Subtle Current Location Marker (Home Screen: Shivajinagar, Pune)
+      const currentLocHtml = `
+        <div class="current-loc-marker-pulse" title="Current Location: Shivajinagar, Pune">
+          <div class="current-loc-ring"></div>
+          <div class="current-loc-dot"></div>
+        </div>
+      `;
+      const currentLocIcon = L.divIcon({
+        className: 'custom-current-loc-div-icon',
+        html: currentLocHtml,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      });
+      currentLocMarker = L.marker([18.5314, 73.8446], { icon: currentLocIcon, zIndexOffset: 700 });
+
+      mapInitialized = true;
+    } catch (err) {
+      console.error('Failed to initialize Leaflet OSM map:', err);
+    }
+  }
+
+  // ============================================================================
+  // 7. PRIMARY NAVIGATION PRODUCT FLOW: DESTINATION -> PREVIEW -> NAVIGATION
   // ============================================================================
 
   /**
-   * Select a prototype Pune destination
+   * Select a destination (from recent searches or query)
    */
   window.selectPuneRoute = function (routeId) {
     if (!PUNE_ROUTES[routeId]) return;
     navState.currentRouteId = routeId;
     const route = PUNE_ROUTES[routeId];
 
-    // Set internal kinematics source
-    state.dataset = route.datasetSource;
-
-    // Reset vehicle index
+    state.dataset = route.datasetSource || 'S-Vta1a';
     navState.index = 0;
     navState.outageStartIdx = -1;
     navState.isArrived = false;
 
-    // Update active highlight on destination cards
+    // Generate dense route along real OSM roads
+    if (route.roadWaypoints && route.roadWaypoints.length >= 2) {
+      currentDenseRoute = generateDenseRoute(route.roadWaypoints, 1000);
+      currentDenseCoords = currentDenseRoute.map(pt => [pt.lat, pt.lng]);
+    }
+
+    if (dom.destSearchInput) {
+      dom.destSearchInput.value = route.name;
+    }
+
     const cardMap = {
       'pune-airport': dom.destCardAirport,
       'viman-nagar': dom.destCardViman,
       'pune-station': dom.destCardStation,
+      'shivajinagar': dom.destCardShivajinagar,
       'hinjawadi': dom.destCardHinjawadi
     };
     Object.keys(cardMap).forEach((id) => {
@@ -412,7 +816,6 @@
       }
     });
 
-    // Populate Route Preview card
     if (dom.previewRouteTitle) {
       dom.previewRouteTitle.textContent = `${route.departure} ➔ ${route.name}`;
     }
@@ -437,8 +840,87 @@
       if (dom.previewSector3Desc) dom.previewSector3Desc.textContent = route.sectors[2].desc;
     }
 
-    // Advance to Step 2: Route Preview
     setFlowStep('preview');
+  };
+
+  /**
+   * Handle user-typed destination search (supports arbitrary destinations)
+   */
+  window.submitDestinationSearch = function () {
+    const input = dom.destSearchInput || document.getElementById('destination-search-input');
+    const query = input ? input.value.trim() : '';
+    if (!query) return;
+
+    // 1. Check if query matches any known recent route
+    const lower = query.toLowerCase();
+    for (const [key, r] of Object.entries(PUNE_ROUTES)) {
+      if (r.name.toLowerCase().includes(lower) || key.includes(lower)) {
+        selectPuneRoute(key);
+        return;
+      }
+    }
+
+    // 2. Check if query matches a predefined corridor preset
+    let matchPreset = null;
+    for (const [key, p] of Object.entries(PUNE_TYPED_PRESETS)) {
+      if (lower.includes(key)) {
+        matchPreset = p;
+        break;
+      }
+    }
+
+    const customId = 'custom-' + Date.now();
+    const destName = matchPreset ? matchPreset.name : query;
+    const destCorridor = matchPreset ? matchPreset.corridor : `Prototype Navigation Corridor towards ${query}`;
+    const destDist = matchPreset ? matchPreset.distKm : 11.5;
+    const destMin = matchPreset ? matchPreset.durationMin : 28;
+    const destWaypoints = matchPreset ? matchPreset.roadWaypoints : [
+      [18.5314, 73.8446], // Shivajinagar Departure
+      [18.5340, 73.8530],
+      [18.5385, 73.8650],
+      [18.5450, 73.8780],
+      [18.5530, 73.8890],
+      [18.5620, 73.9020],
+      [18.5720, 73.9140]
+    ];
+
+    PUNE_ROUTES[customId] = {
+      id: customId,
+      name: destName,
+      departure: 'Shivajinagar, Pune',
+      corridor: destCorridor,
+      distKm: destDist,
+      durationMin: destMin,
+      arrivalDeterministic: '12:28 PM',
+      datasetSource: 'S-Vta1a',
+      arrivalName: destName,
+      isArbitrary: true,
+      roadWaypoints: destWaypoints,
+      sectors: [
+        {
+          title: `Sector 1: Departure towards ${destName}`,
+          desc: 'Open-sky multi-constellation GNSS lock active. Inertial baseline steady.'
+        },
+        {
+          title: 'Sector 2: Arterial Underpass Corridor (GNSS Outage Demo)',
+          desc: 'Test seamless transition to inertial dead reckoning via SIMULATE GNSS OUTAGE.'
+        },
+        {
+          title: `Sector 3: Final Approach to ${destName}`,
+          desc: 'Satellite signal reacquisition and multi-sensor fusion re-engagement.'
+        }
+      ],
+      instructionCues: [
+        { pct: 0.00, dist: 'In 400m', title: `Head towards ${destName} Corridor`, sub: 'Continuous Inertial Monitoring Active', icon: '⬆' },
+        { pct: 0.20, dist: 'In 800m', title: 'Continue on Main Arterial Route', sub: 'Ground Truth Reference Active', icon: '↗' },
+        { pct: 0.45, dist: 'In 500m', title: 'Approaching Underpass Sector', sub: 'Inertial Alignment Checked', icon: '⬆' },
+        { pct: 0.65, dist: 'In 1.1km', title: 'Continue through GNSS-Denied Zone', sub: 'Dead Reckoning Active', icon: '⬆' },
+        { pct: 0.85, dist: 'In 400m', title: `Approaching ${destName}`, sub: 'Multi-sensor fusion locked', icon: '↰' },
+        { pct: 0.98, dist: 'Arrived', title: `You have arrived at ${destName}`, sub: 'Destination reached successfully', icon: '🏁' }
+      ]
+    };
+
+    selectPuneRoute(customId);
   };
 
   /**
@@ -447,7 +929,7 @@
   window.setFlowStep = function (step) {
     navState.flowStep = step;
 
-    // Update mini stepper headers
+    // Mini stepper buttons
     if (dom.stepBtnDest) dom.stepBtnDest.classList.toggle('active', step === 'destination');
     if (dom.stepBtnPreview) dom.stepBtnPreview.classList.toggle('active', step === 'preview');
     if (dom.stepBtnNav) dom.stepBtnNav.classList.toggle('active', step === 'navigating');
@@ -462,8 +944,8 @@
     if (dom.navBottomCard) dom.navBottomCard.classList.toggle('hidden', !isNav);
     if (dom.navArrivalCard) dom.navArrivalCard.classList.add('hidden');
 
-    if (!isNav && navState.isPlaying) {
-      togglePlayback();
+    if (!isNav) {
+      stopNavAnimation();
     }
 
     updateNavigationUI();
@@ -471,7 +953,7 @@
   };
 
   /**
-   * Start live navigation simulation
+   * Start live navigation (auto-progresses at realistic road pace)
    */
   window.startNavigation = function () {
     setFlowStep('navigating');
@@ -481,61 +963,40 @@
 
     updateNavigationUI();
     renderNavMap();
-
-    // Start playback
-    if (!navState.isPlaying) {
-      togglePlayback();
-    }
+    startNavAnimation();
   };
 
   /**
    * Exit live navigation and return to destination selection
    */
   window.exitNavigation = function () {
-    if (navState.isPlaying) {
-      togglePlayback();
-    }
+    stopNavAnimation();
     setFlowStep('destination');
   };
 
   /**
-   * Replay current navigation route from start
+   * Smooth, realistic-speed vehicle animation timer (~30 fps).
+   * Pacing: ~6.5 points/second gives ~2.5 minutes for full trajectory traversal (1000 points).
    */
-  window.replayNavigation = function () {
-    if (dom.navArrivalCard) dom.navArrivalCard.classList.add('hidden');
-    navState.index = 0;
-    navState.outageStartIdx = -1;
-    navState.isArrived = false;
+  let lastTimestamp = 0;
 
-    if (state.gnssOutage) {
-      toggleGnssOutage(); // restore GNSS
-    }
+  function startNavAnimation() {
+    stopNavAnimation();
+    navState.isPlaying = true;
+    lastTimestamp = performance.now();
 
-    setFlowStep('navigating');
-    if (!navState.isPlaying) {
-      togglePlayback();
-    }
-  };
+    navState.playTimer = setInterval(() => {
+      if (!navState.isPlaying) return;
+      const now = performance.now();
+      const dt = Math.min((now - lastTimestamp) / 1000, 0.1);
+      lastTimestamp = now;
 
-  /**
-   * Playback Pause / Resume toggle
-   */
-  window.togglePlayback = function () {
-    navState.isPlaying = !navState.isPlaying;
+      if (currentDenseRoute && currentDenseRoute.length > 0) {
+        const totalPts = currentDenseRoute.length;
+        const pointsPerSec = 6.5;
+        navState.index += pointsPerSec * dt;
 
-    if (dom.dockPauseIcon) {
-      dom.dockPauseIcon.textContent = navState.isPlaying ? '⏸' : '▶';
-    }
-
-    if (navState.isPlaying) {
-      const tickInterval = 40; // 25 fps
-      navState.playTimer = setInterval(() => {
-        if (!dbData || !dbData[state.dataset]) return;
-        const totalPts = dbData[state.dataset].trajectory.gt_east_m.length;
-
-        navState.index += navState.speedMultiplier;
-
-        if (navState.index >= totalPts - 4) {
+        if (navState.index >= totalPts - 1) {
           navState.index = totalPts - 1;
           handleDestinationArrival();
           return;
@@ -543,25 +1004,26 @@
 
         updateNavigationUI();
         renderNavMap();
-      }, tickInterval);
-    } else {
-      if (navState.playTimer) {
-        clearInterval(navState.playTimer);
-        navState.playTimer = null;
       }
+    }, 33);
+  }
+
+  function stopNavAnimation() {
+    navState.isPlaying = false;
+    if (navState.playTimer) {
+      clearInterval(navState.playTimer);
+      navState.playTimer = null;
     }
-  };
+  }
 
   /**
    * Handle vehicle reaching destination
    */
   function handleDestinationArrival() {
     navState.isArrived = true;
-    if (navState.isPlaying) {
-      togglePlayback();
-    }
+    stopNavAnimation();
 
-    const route = PUNE_ROUTES[navState.currentRouteId];
+    const route = PUNE_ROUTES[navState.currentRouteId] || PUNE_ROUTES['pune-airport'];
 
     // Update bottom dock
     if (dom.dockTimeRemaining) dom.dockTimeRemaining.textContent = '0 min';
@@ -569,13 +1031,13 @@
     if (dom.dockDistTravelled) dom.dockDistTravelled.textContent = route.distKm.toFixed(1);
     if (dom.navSpeedDisplay) dom.navSpeedDisplay.textContent = '0.0';
 
-    // Update top instruction card
+    // Update top instruction card (Clean destination arrival, no floating flag)
     if (dom.instructionDist) dom.instructionDist.textContent = 'Arrived';
     if (dom.instructionTitle) dom.instructionTitle.textContent = `You have arrived at ${route.name}`;
-    if (dom.instructionSub) dom.instructionSub.textContent = `${route.arrivalName} · Navigation Complete`;
+    if (dom.instructionSub) dom.instructionSub.textContent = `${route.arrivalName} · Trip Complete`;
     if (dom.instructionIcon) dom.instructionIcon.textContent = '🏁';
 
-    // Show arrival completion modal
+    // Show arrival completion modal (No video/replay buttons)
     if (dom.arrivalTitle) {
       dom.arrivalTitle.textContent = `You have arrived at ${route.arrivalName}`;
     }
@@ -590,18 +1052,18 @@
   }
 
   // ============================================================================
-  // 7. GNSS OUTAGE DEMONSTRATION & RECOVERY
+  // 8. GNSS OUTAGE DEMONSTRATION & RECOVERY
   // ============================================================================
   window.toggleGnssOutage = function () {
     state.gnssOutage = !state.gnssOutage;
 
     if (state.gnssOutage) {
-      // OUTAGE ACTIVE
+      // OUTAGE ACTIVE — SIMULATED OUTAGE — DEMONSTRATION
       navState.outageStartIdx = navState.index;
 
       // Top bar & buttons
       dom.gnssBadge.className = 'status-indicator outage';
-      dom.gnssStatusText.textContent = 'DEAD RECKONING (IMU ONLY)';
+      dom.gnssStatusText.textContent = 'SIMULATED OUTAGE — DEMONSTRATION';
       if (dom.btnQuickOutage) dom.btnQuickOutage.classList.add('active-outage');
       if (dom.quickOutageText) dom.quickOutageText.textContent = 'RESTORE GNSS';
 
@@ -609,24 +1071,27 @@
       if (dom.btnDockOutage) dom.btnDockOutage.classList.add('active-outage');
       if (dom.dockOutageText) dom.dockOutageText.textContent = 'RESTORE GNSS SIGNAL';
 
-      // Live HUD indicator
+      // Live HUD indicator: Dead Reckoning (IMU-only)
       if (dom.hudModeDot) dom.hudModeDot.className = 'hud-mode-dot outage';
       if (dom.hudModeTitle) dom.hudModeTitle.textContent = 'DEAD RECKONING';
-      if (dom.hudOutageAlert) dom.hudOutageAlert.classList.remove('hidden');
+      if (dom.hudOutageAlert) {
+        dom.hudOutageAlert.textContent = 'SIMULATED OUTAGE — DEMONSTRATION';
+        dom.hudOutageAlert.classList.remove('hidden');
+      }
 
       showToast({
         type: 'outage',
-        icon: '⚠',
-        title: 'GNSS SIGNAL LOST',
-        desc: 'Switched to inertial dead reckoning (IMU-only). Navigation continues seamlessly.'
+        icon: '⚡',
+        title: 'SIMULATED OUTAGE — DEMONSTRATION',
+        desc: 'Switched to inertial dead reckoning (IMU-only). Primary navigation arrow continues seamlessly.'
       });
     } else {
-      // OUTAGE RECOVERED
+      // OUTAGE RECOVERED — GNSS RECOVERED -> GNSS + INS
       navState.outageStartIdx = -1;
 
       // Top bar & buttons
       dom.gnssBadge.className = 'status-indicator online';
-      dom.gnssStatusText.textContent = 'GNSS + INS (ONLINE)';
+      dom.gnssStatusText.textContent = 'GNSS AVAILABLE';
       if (dom.btnQuickOutage) dom.btnQuickOutage.classList.remove('active-outage');
       if (dom.quickOutageText) dom.quickOutageText.textContent = 'SIMULATE OUTAGE';
 
@@ -636,7 +1101,7 @@
 
       // Live HUD indicator
       if (dom.hudModeDot) dom.hudModeDot.className = 'hud-mode-dot';
-      if (dom.hudModeTitle) dom.hudModeTitle.textContent = 'GNSS + INS';
+      if (dom.hudModeTitle) dom.hudModeTitle.textContent = 'GNSS AVAILABLE';
       if (dom.hudOutageAlert) dom.hudOutageAlert.classList.add('hidden');
 
       showToast({
@@ -652,21 +1117,24 @@
   };
 
   // ============================================================================
-  // 8. LIVE NAVIGATION TELEMETRY UPDATES
+  // 9. LIVE NAVIGATION TELEMETRY UPDATES & LEAFLET MAP RENDERER
   // ============================================================================
   function updateNavigationUI() {
-    if (!dbData || !dbData[state.dataset]) return;
-    const traj = dbData[state.dataset].trajectory;
-    const totalPts = traj.gt_east_m.length;
-    const idx = Math.min(Math.max(0, navState.index), totalPts - 1);
+    if (!currentDenseRoute || currentDenseRoute.length === 0) return;
+    const totalPts = currentDenseRoute.length;
+    const idx = Math.min(Math.max(0, Math.floor(navState.index)), totalPts - 1);
     const progress = idx / (totalPts - 1);
-
     const route = PUNE_ROUTES[navState.currentRouteId] || PUNE_ROUTES['pune-airport'];
 
-    // Speedometer
-    const currentSpeed = traj.speed_kmh[idx] || 0;
-    if (dom.navSpeedDisplay) {
-      dom.navSpeedDisplay.textContent = currentSpeed.toFixed(1);
+    // Real recorded speed from IO-VNBD dataset
+    if (dbData && dbData[state.dataset]) {
+      const traj = dbData[state.dataset].trajectory;
+      const totalTraj = traj.gt_east_m.length;
+      const trajIdx = Math.min(Math.floor(progress * (totalTraj - 1)), totalTraj - 1);
+      const currentSpeed = traj.speed_kmh[trajIdx] || 0;
+      if (dom.navSpeedDisplay) {
+        dom.navSpeedDisplay.textContent = currentSpeed.toFixed(1);
+      }
     }
 
     // Distance countdown
@@ -675,31 +1143,25 @@
     if (dom.dockDistRemaining) dom.dockDistRemaining.textContent = `${remDist.toFixed(1)} km`;
     if (dom.dockDistTravelled) dom.dockDistTravelled.textContent = doneDist.toFixed(1);
 
-    // Time countdown & dynamic arrival time
+    // Time countdown & ETA
     const remMin = Math.max(0, Math.ceil(route.durationMin * (1 - progress)));
     if (dom.dockTimeRemaining) dom.dockTimeRemaining.textContent = `${remMin} min`;
     if (dom.dockArriveTime) dom.dockArriveTime.textContent = route.arrivalDeterministic;
 
-    // Heading / Bearing calculation
-    const nextIdx = Math.min(idx + 1, totalPts - 1);
-    const prevIdx = Math.max(idx - 1, 0);
-    const de = traj.gt_east_m[nextIdx] - traj.gt_east_m[prevIdx];
-    const dn = traj.gt_north_m[nextIdx] - traj.gt_north_m[prevIdx];
-    let bearingDeg = 0;
-    if (Math.abs(de) > 0.001 || Math.abs(dn) > 0.001) {
-      bearingDeg = Math.round((Math.atan2(de, dn) * 180 / Math.PI + 360) % 360);
-    }
-    const cardinal = getCardinalDirection(bearingDeg);
-    const bearingStr = bearingDeg.toString().padStart(3, '0');
+    // Heading / Bearing readout and compass rotation
+    const pt = currentDenseRoute[idx] || currentDenseRoute[0];
+    const bearingDegVal = Math.round(pt.heading || 0);
+    const cardinal = getCardinalDirection(bearingDegVal);
+    const bearingStr = bearingDegVal.toString().padStart(3, '0');
 
     if (dom.compassBearingReadout) {
       dom.compassBearingReadout.textContent = `${bearingStr}° ${cardinal}`;
     }
     if (dom.compassArrowWrap) {
-      dom.compassArrowWrap.style.transform = `rotate(${bearingDeg}deg)`;
+      dom.compassArrowWrap.style.transform = `rotate(${bearingDegVal}deg)`;
     }
 
-    // Dynamic Turn-by-Turn Instruction Cues (PROTOTYPE HUD)
+    // Dynamic Turn-by-Turn Instruction Cues
     if (route.instructionCues && route.instructionCues.length > 0) {
       let activeCue = route.instructionCues[0];
       for (let i = 0; i < route.instructionCues.length; i++) {
@@ -714,459 +1176,106 @@
     }
   }
 
-  // ============================================================================
-  // 9. HIGH-DPI CANVAS NAVIGATION MAP RENDERER
-  // ============================================================================
+  window.renderNavMap = renderNavMap;
+  window.navState = navState;
+  window.appState = state;
+
   function renderNavMap() {
-    if (!dom.canvasNavMap || !dbData || !dbData[state.dataset]) return;
-    const traj = dbData[state.dataset].trajectory;
-    const { ctx, width, height } = setupCanvas(dom.canvasNavMap);
+    if (!mapInitialized) {
+      initMap();
+    }
+    if (!leafletMap) return;
 
-    ctx.clearRect(0, 0, width, height);
-
-    const totalPts = traj.gt_east_m.length;
-    const activeIdx = Math.min(Math.max(0, navState.index), totalPts - 1);
     const route = PUNE_ROUTES[navState.currentRouteId] || PUNE_ROUTES['pune-airport'];
 
-    // 1. Determine Coordinate Transformation
-    const minE = Math.min(...traj.gt_east_m);
-    const maxE = Math.max(...traj.gt_east_m);
-    const minN = Math.min(...traj.gt_north_m);
-    const maxN = Math.max(...traj.gt_north_m);
-
-    const spanE = Math.max(maxE - minE, 500);
-    const spanN = Math.max(maxN - minN, 500);
-
-    const isNavigating = navState.flowStep === 'navigating' || navState.isArrived;
-
-    let toScreenX, toScreenY;
-
-    if (isNavigating) {
-      // In live navigation: Camera smoothly follows vehicle, near-centered
-      const curE = traj.gt_east_m[activeIdx];
-      const curN = traj.gt_north_m[activeIdx];
-
-      // Vehicle placed at ~54% from top so route ahead is clearly visible
-      const originX = width * 0.5;
-      const originY = height * 0.54;
-
-      // Generous zoom scale for immersive navigation perspective
-      const baseScale = Math.min(width / spanE, height / spanN);
-      const navScale = baseScale * 1.55;
-
-      toScreenX = (e) => originX + (e - curE) * navScale;
-      toScreenY = (n) => originY - (n - curN) * navScale;
-    } else {
-      // In destination overview or route preview: Frame whole route
-      const padX = 100;
-      const padY = 90;
-      const availW = Math.max(width - padX * 2, 100);
-      const availH = Math.max(height - padY * 2, 100);
-
-      const scale = Math.min(availW / spanE, availH / spanN);
-      const centerE = (minE + maxE) / 2;
-      const centerN = (minN + maxN) / 2;
-      const originX = padX + availW / 2;
-      const originY = padY + availH / 2;
-
-      toScreenX = (e) => originX + (e - centerE) * scale;
-      toScreenY = (n) => originY - (n - centerN) * scale;
+    if (navState.flowStep === 'destination') {
+      // Step 1: Destination Selection (Home) — Subtle current-location marker on Pune map
+      if (routeCasingLayer) routeCasingLayer.setLatLngs([]);
+      if (routeAheadLayer) routeAheadLayer.setLatLngs([]);
+      if (routePastLayer) routePastLayer.setLatLngs([]);
+      if (vehicleMarker && leafletMap.hasLayer(vehicleMarker)) vehicleMarker.remove();
+      if (startMarker && leafletMap.hasLayer(startMarker)) startMarker.remove();
+      if (destMarker && leafletMap.hasLayer(destMarker)) destMarker.remove();
+      if (currentLocMarker) {
+        currentLocMarker.setLatLng([18.5314, 73.8446]).addTo(leafletMap);
+      }
+      leafletMap.setView([18.5314, 73.8446], 13);
+      return;
     }
 
-    // 2. Draw Subtle Pune City Secondary Street Grid
-    ctx.save();
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
-    ctx.lineWidth = 1;
-    const gridStep = 45;
-    for (let x = 0; x <= width; x += gridStep) {
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, height);
-      ctx.stroke();
+    // Remove home location marker during preview and active navigation
+    if (currentLocMarker && leafletMap.hasLayer(currentLocMarker)) {
+      currentLocMarker.remove();
     }
-    for (let y = 0; y <= height; y += gridStep) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(width, y);
-      ctx.stroke();
+
+    if (!currentDenseRoute || currentDenseRoute.length === 0) {
+      if (route && route.roadWaypoints) {
+        currentDenseRoute = generateDenseRoute(route.roadWaypoints, 1000);
+        currentDenseCoords = currentDenseRoute.map(pt => [pt.lat, pt.lng]);
+      }
     }
-    ctx.restore();
+    if (!currentDenseCoords || currentDenseCoords.length === 0) return;
 
-    // 3. Draw Mula-Mutha River Ribbon (Pune Landmark Feature)
-    ctx.save();
-    ctx.strokeStyle = '#18232C';
-    ctx.lineWidth = 34;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.beginPath();
-    const riverPts = [
-      { e: minE - spanE * 0.4, n: minN - spanN * 0.15 },
-      { e: minE + spanE * 0.1, n: minN + spanN * 0.08 },
-      { e: minE + spanE * 0.45, n: minN + spanN * 0.28 },
-      { e: minE + spanE * 0.85, n: minN + spanN * 0.52 },
-      { e: minE + spanE * 1.35, n: minN + spanN * 0.75 }
-    ];
-    for (let i = 0; i < riverPts.length; i++) {
-      const rx = toScreenX(riverPts[i].e);
-      const ry = toScreenY(riverPts[i].n);
-      if (i === 0) ctx.moveTo(rx, ry);
-      else ctx.lineTo(rx, ry);
-    }
-    ctx.stroke();
+    const startCoord = currentDenseCoords[0];
+    const destCoord = currentDenseCoords[currentDenseCoords.length - 1];
 
-    // Inner water stream
-    ctx.strokeStyle = '#203240';
-    ctx.lineWidth = 18;
-    ctx.stroke();
+    if (navState.flowStep === 'preview') {
+      // Step 2: Route Preview — Full corridor overview on actual OSM road network
+      routeCasingLayer.setLatLngs(currentDenseCoords);
+      routeAheadLayer.setLatLngs(currentDenseCoords);
+      routePastLayer.setLatLngs([]);
 
-    // River label
-    const midRiverX = toScreenX(riverPts[2].e);
-    const midRiverY = toScreenY(riverPts[2].n);
-    ctx.fillStyle = 'rgba(100, 160, 210, 0.45)';
-    ctx.font = '600 10px "Inter", sans-serif';
-    ctx.fillText('〜 Mula-Mutha River Corridor', midRiverX - 40, midRiverY + 4);
-    ctx.restore();
+      startMarker.setLatLng(startCoord).addTo(leafletMap);
+      destMarker.setLatLng(destCoord).addTo(leafletMap);
 
-    // 4. Draw Background Pune Arterial Roads Network
-    ctx.save();
-    ctx.strokeStyle = '#231B1B';
-    ctx.lineWidth = 7;
-    ctx.lineCap = 'round';
-    const arterialCorridors = [
-      // FC Road to Sangamwadi
-      [
-        { e: minE - spanE * 0.2, n: minN + spanN * 0.2 },
-        { e: minE + spanE * 0.25, n: minN + spanN * 0.15 },
-        { e: minE + spanE * 0.7, n: minN + spanN * 0.1 }
-      ],
-      // Old Pune-Mumbai Highway branch
-      [
-        { e: minE + spanE * 0.05, n: minN - spanN * 0.3 },
-        { e: minE + spanE * 0.15, n: minN + spanN * 0.35 },
-        { e: minE + spanE * 0.4, n: minN + spanN * 0.9 }
-      ],
-      // Nagar Road Arterial Highway
-      [
-        { e: minE + spanE * 0.3, n: minN + spanN * 0.3 },
-        { e: minE + spanE * 0.8, n: minN + spanN * 0.6 },
-        { e: minE + spanE * 1.3, n: minN + spanN * 0.85 }
-      ]
-    ];
-    arterialCorridors.forEach((path) => {
-      ctx.beginPath();
-      path.forEach((pt, i) => {
-        const ax = toScreenX(pt.e);
-        const ay = toScreenY(pt.n);
-        if (i === 0) ctx.moveTo(ax, ay);
-        else ctx.lineTo(ax, ay);
+      vehicleMarker.setLatLng(startCoord).addTo(leafletMap);
+      const arrowEl = document.getElementById('nav-vehicle-arrow-wrap');
+      if (arrowEl && currentDenseRoute.length > 0) {
+        arrowEl.style.transform = `rotate(${Math.round(currentDenseRoute[0].heading)}deg)`;
+      }
+
+      const bounds = L.latLngBounds(currentDenseCoords);
+      const isMobile = window.innerWidth <= 768;
+      leafletMap.fitBounds(bounds, {
+        paddingTopLeft: isMobile ? [30, 30] : [480, 50],
+        paddingBottomRight: isMobile ? [30, 280] : [50, 50],
+        maxZoom: 15
       });
-      ctx.stroke();
-    });
-    ctx.restore();
+      return;
+    }
 
-    // 5. Draw Pune Landmark Chips on Map
-    const landmarks = [
-      { name: 'Shivajinagar Junction', e: traj.gt_east_m[0], n: traj.gt_north_m[0] + 80 },
-      { name: 'Sancheti Flyover', e: traj.gt_east_m[Math.floor(totalPts * 0.15)], n: traj.gt_north_m[Math.floor(totalPts * 0.15)] - 90 },
-      { name: 'Sangamwadi Bridge', e: traj.gt_east_m[Math.floor(totalPts * 0.35)], n: traj.gt_north_m[Math.floor(totalPts * 0.35)] + 100 },
-      { name: 'Yerwada Chowk', e: traj.gt_east_m[Math.floor(totalPts * 0.55)], n: traj.gt_north_m[Math.floor(totalPts * 0.55)] - 90 },
-      { name: 'Kalyani Nagar Link', e: traj.gt_east_m[Math.floor(totalPts * 0.75)], n: traj.gt_north_m[Math.floor(totalPts * 0.75)] + 90 },
-      { name: route.arrivalName, e: traj.gt_east_m[totalPts - 1], n: traj.gt_north_m[totalPts - 1] - 80 }
-    ];
+    if (navState.flowStep === 'navigating') {
+      // Step 3: Live Navigation — Single primary navigation arrow, smooth camera tracking
+      const totalDense = currentDenseRoute.length;
+      const idx = Math.min(Math.max(0, Math.floor(navState.index)), totalDense - 1);
+      const pt = currentDenseRoute[idx] || currentDenseRoute[0];
 
-    landmarks.forEach((lm) => {
-      const lx = toScreenX(lm.e);
-      const ly = toScreenY(lm.n);
-
-      // Only draw if within visible canvas bounds
-      if (lx > -40 && lx < width + 40 && ly > -30 && ly < height + 30) {
-        ctx.save();
-        ctx.fillStyle = 'rgba(28, 22, 22, 0.85)';
-        ctx.strokeStyle = 'rgba(197, 170, 106, 0.3)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.roundRect(lx - 6, ly - 9, lm.name.length * 6.5 + 16, 18, 3);
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.fillStyle = '#C5AA6A';
-        ctx.font = '600 9px "Inter", sans-serif';
-        ctx.fillText(`• ${lm.name}`, lx, ly + 3);
-        ctx.restore();
+      // 1. Primary Vehicle Arrow (Sunset Orange #FF5841) — ONLY arrow on the map
+      vehicleMarker.setLatLng([pt.lat, pt.lng]).addTo(leafletMap);
+      const arrowEl = document.getElementById('nav-vehicle-arrow-wrap');
+      if (arrowEl) {
+        arrowEl.style.transform = `rotate(${Math.round(pt.heading)}deg)`;
       }
-    });
 
-    // 6. Draw Highlighted Primary Navigation Route Corridor
-    // Layer A: Outer Dark Asphalt Road Casing
-    ctx.save();
-    ctx.strokeStyle = '#272020';
-    ctx.lineWidth = 16;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.beginPath();
-    for (let i = 0; i < totalPts; i++) {
-      const sx = toScreenX(traj.gt_east_m[i]);
-      const sy = toScreenY(traj.gt_north_m[i]);
-      if (i === 0) ctx.moveTo(sx, sy);
-      else ctx.lineTo(sx, sy);
-    }
-    ctx.stroke();
+      // 2. Route Progress Layers (Sunset orange path ahead, subtle gray completed)
+      routePastLayer.setLatLngs(currentDenseCoords.slice(0, idx + 1));
+      routeAheadLayer.setLatLngs(currentDenseCoords.slice(idx));
 
-    // Layer B: Completed Path Trail (behind the vehicle arrow)
-    ctx.strokeStyle = '#C5AA6A';
-    ctx.lineWidth = 7;
-    ctx.shadowColor = 'rgba(197, 170, 106, 0.45)';
-    ctx.shadowBlur = 10;
-    ctx.beginPath();
-    for (let i = 0; i <= activeIdx; i++) {
-      const sx = toScreenX(traj.gt_east_m[i]);
-      const sy = toScreenY(traj.gt_north_m[i]);
-      if (i === 0) ctx.moveTo(sx, sy);
-      else ctx.lineTo(sx, sy);
-    }
-    ctx.stroke();
-    ctx.restore();
+      // 3. Start Marker
+      startMarker.setLatLng(startCoord).addTo(leafletMap);
 
-    // Layer C: Ahead Route Road Surface (in front of arrow)
-    ctx.save();
-    ctx.strokeStyle = '#3E3434';
-    ctx.lineWidth = 7;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.beginPath();
-    for (let i = activeIdx; i < totalPts; i++) {
-      const sx = toScreenX(traj.gt_east_m[i]);
-      const sy = toScreenY(traj.gt_north_m[i]);
-      if (i === activeIdx) ctx.moveTo(sx, sy);
-      else ctx.lineTo(sx, sy);
-    }
-    ctx.stroke();
-
-    // Layer D: Dashed White Route Centerline Ahead
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
-    ctx.lineWidth = 1.4;
-    ctx.setLineDash([5, 8]);
-    ctx.beginPath();
-    for (let i = activeIdx; i < totalPts; i++) {
-      const sx = toScreenX(traj.gt_east_m[i]);
-      const sy = toScreenY(traj.gt_north_m[i]);
-      if (i === activeIdx) ctx.moveTo(sx, sy);
-      else ctx.lineTo(sx, sy);
-    }
-    ctx.stroke();
-    ctx.restore();
-
-    // 7. Branching Dead-Reckoning Divergence Trail during GNSS Outage
-    if (state.gnssOutage) {
-      const startI = navState.outageStartIdx >= 0 ? navState.outageStartIdx : 0;
-
-      if (activeIdx > startI) {
-        ctx.save();
-        ctx.strokeStyle = '#FF5A36';
-        ctx.lineWidth = 3;
-        ctx.setLineDash([6, 5]);
-        ctx.shadowColor = 'rgba(255, 90, 54, 0.7)';
-        ctx.shadowBlur = 12;
-        ctx.beginPath();
-
-        for (let i = startI; i <= activeIdx; i++) {
-          const p3_e_drift = (traj.p3_east_m[i] - traj.p3_east_m[startI]) * 0.15;
-          const p3_n_drift = (traj.p3_north_m[i] - traj.p3_north_m[startI]) * 0.15;
-          const sx = toScreenX(traj.gt_east_m[startI] + p3_e_drift);
-          const sy = toScreenY(traj.gt_north_m[startI] + p3_n_drift);
-
-          if (i === startI) ctx.moveTo(sx, sy);
-          else ctx.lineTo(sx, sy);
+      // 4. Destination pin in Red-Violet, removed cleanly upon arrival
+      if (navState.isArrived) {
+        if (destMarker && leafletMap.hasLayer(destMarker)) {
+          destMarker.remove();
         }
-        ctx.stroke();
-        ctx.restore();
-
-        // Expanding DR Uncertainty Circle
-        const p3_e_last = (traj.p3_east_m[activeIdx] - traj.p3_east_m[startI]) * 0.15;
-        const p3_n_last = (traj.p3_north_m[activeIdx] - traj.p3_north_m[startI]) * 0.15;
-        const drX = toScreenX(traj.gt_east_m[startI] + p3_e_last);
-        const drY = toScreenY(traj.gt_north_m[startI] + p3_n_last);
-
-        const radius = Math.min(65, 16 + (activeIdx - startI) * 0.55);
-        ctx.save();
-        ctx.fillStyle = 'rgba(255, 90, 54, 0.12)';
-        ctx.strokeStyle = 'rgba(255, 90, 54, 0.85)';
-        ctx.lineWidth = 1.5;
-        ctx.setLineDash([4, 4]);
-        ctx.beginPath();
-        ctx.arc(drX, drY, radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.fillStyle = '#FFA38F';
-        ctx.font = '700 9px "JetBrains Mono", monospace';
-        ctx.fillText('DEAD RECKONING DRIFT', drX + radius + 8, drY + 3);
-        ctx.restore();
+      } else {
+        destMarker.setLatLng(destCoord).addTo(leafletMap);
       }
+
+      // 5. Smooth Camera Tracking
+      leafletMap.setView([pt.lat, pt.lng], 16, { animate: false });
     }
-
-    // 8. Start Location Marker (Shivajinagar)
-    const startX = toScreenX(traj.gt_east_m[0]);
-    const startY = toScreenY(traj.gt_north_m[0]);
-    ctx.save();
-    ctx.fillStyle = '#55D285';
-    ctx.beginPath();
-    ctx.arc(startX, startY, 6, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    ctx.fillStyle = '#55D285';
-    ctx.font = '700 9px "JetBrains Mono", monospace';
-    ctx.fillText('START: Shivajinagar', startX + 10, startY + 4);
-    ctx.restore();
-
-    // 9. Destination Pin Marker (e.g. Pune Airport)
-    const endX = toScreenX(traj.gt_east_m[totalPts - 1]);
-    const endY = toScreenY(traj.gt_north_m[totalPts - 1]);
-    ctx.save();
-    // Destination Beacon Pulse
-    ctx.fillStyle = 'rgba(197, 170, 106, 0.2)';
-    ctx.beginPath();
-    ctx.arc(endX, endY, 18, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#C5AA6A';
-    ctx.beginPath();
-    ctx.arc(endX, endY, 7, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = '700 11px "Space Grotesk", sans-serif';
-    ctx.fillText(`🏁 ${route.name}`, endX + 12, endY + 4);
-    ctx.restore();
-
-    // 10. Moving 3D Navigation Arrow (Critical Requirement)
-    let curVx, curVy;
-    if (state.gnssOutage && navState.outageStartIdx >= 0) {
-      // Moves along dead-reckoning position during outage
-      const startI = navState.outageStartIdx;
-      const p3_e_drift = (traj.p3_east_m[activeIdx] - traj.p3_east_m[startI]) * 0.15;
-      const p3_n_drift = (traj.p3_north_m[activeIdx] - traj.p3_north_m[startI]) * 0.15;
-      curVx = toScreenX(traj.gt_east_m[startI] + p3_e_drift);
-      curVy = toScreenY(traj.gt_north_m[startI] + p3_n_drift);
-    } else {
-      // Moves along route trajectory
-      curVx = toScreenX(traj.gt_east_m[activeIdx]);
-      curVy = toScreenY(traj.gt_north_m[activeIdx]);
-    }
-
-    // Calculate heading angle
-    const nextI = Math.min(activeIdx + 1, totalPts - 1);
-    const prevI = Math.max(activeIdx - 1, 0);
-    const nxtVx = toScreenX(traj.gt_east_m[nextI]);
-    const nxtVy = toScreenY(traj.gt_north_m[nextI]);
-    const prvVx = toScreenX(traj.gt_east_m[prevI]);
-    const prvVy = toScreenY(traj.gt_north_m[prevI]);
-
-    let headingAngle = Math.atan2(nxtVy - prvVy, nxtVx - prvVx);
-
-    ctx.save();
-    ctx.translate(curVx, curVy);
-    ctx.rotate(headingAngle);
-
-    // Forward Directional Headlight Beam
-    const beamGrad = ctx.createLinearGradient(0, 0, 55, 0);
-    beamGrad.addColorStop(0, 'rgba(255, 245, 215, 0.45)');
-    beamGrad.addColorStop(1, 'rgba(255, 245, 215, 0.0)');
-
-    ctx.save();
-    ctx.fillStyle = beamGrad;
-    ctx.beginPath();
-    ctx.moveTo(8, -6);
-    ctx.lineTo(55, -22);
-    ctx.lineTo(55, 22);
-    ctx.lineTo(8, 6);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
-
-    // Radar / Satellite Beacon Pulse Ring
-    ctx.save();
-    const ringColor = state.gnssOutage ? 'rgba(255, 90, 54, 0.6)' : 'rgba(197, 170, 106, 0.45)';
-    ctx.strokeStyle = ringColor;
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.arc(0, 0, 18, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.restore();
-
-    // 3D Navigation Chevron Arrow
-    // Arrow Shadow
-    ctx.save();
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
-    ctx.beginPath();
-    ctx.moveTo(18, 4);
-    ctx.lineTo(-10, -8);
-    ctx.lineTo(-6, 4);
-    ctx.lineTo(-10, 16);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
-
-    // Left Wing (Slightly darker for 3D depth)
-    ctx.save();
-    ctx.fillStyle = state.gnssOutage ? '#B8321B' : '#A88D4E';
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.moveTo(18, 0); // Tip
-    ctx.lineTo(-10, -11); // Left Wing Tip
-    ctx.lineTo(-6, 0); // Inner Notch
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    // Right Wing (Highlighted for 3D depth)
-    ctx.fillStyle = state.gnssOutage ? '#FF5A36' : '#E8D49E';
-    ctx.beginPath();
-    ctx.moveTo(18, 0); // Tip
-    ctx.lineTo(-6, 0); // Inner Notch
-    ctx.lineTo(-10, 11); // Right Wing Tip
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    // Center Spine Crest
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(18, 0);
-    ctx.lineTo(-6, 0);
-    ctx.stroke();
-
-    // Center Core Dot
-    ctx.fillStyle = state.gnssOutage ? '#FFFFFF' : '#1F1919';
-    ctx.beginPath();
-    ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.restore(); // Restore arrow rotation
-    ctx.restore(); // Restore canvas base transform
-
-    // Floating Speed Tag near Arrow
-    ctx.save();
-    ctx.fillStyle = 'rgba(28, 22, 22, 0.9)';
-    ctx.strokeStyle = state.gnssOutage ? '#FF5A36' : '#C5AA6A';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.roundRect(curVx + 18, curVy - 26, 74, 18, 3);
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.fillStyle = state.gnssOutage ? '#FFA38F' : '#C5AA6A';
-    ctx.font = '700 9px "JetBrains Mono", monospace';
-    ctx.fillText(`${traj.speed_kmh[activeIdx].toFixed(0)} KM/H`, curVx + 24, curVy - 14);
-    ctx.restore();
   }
 
   // ============================================================================
@@ -1640,12 +1749,14 @@
   function setupCanvas(canvas) {
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
+    const w = rect.width || canvas.clientWidth || (canvas.parentElement ? canvas.parentElement.clientWidth : 1200) || 1200;
+    const h = rect.height || canvas.clientHeight || (canvas.parentElement ? canvas.parentElement.clientHeight : 600) || 600;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
     const ctx = canvas.getContext('2d');
     ctx.resetTransform();
     ctx.scale(dpr, dpr);
-    return { ctx, width: rect.width, height: rect.height };
+    return { ctx, width: w, height: h };
   }
 
   function getCardinalDirection(deg) {
