@@ -23,7 +23,11 @@
     <nav class="nav-links">
       <a href="#overview" class="nav-link active">01 Overview</a>
       <a href="#trajectory" class="nav-link">02 Trajectory</a>
-      <a href="#drift" class="nav-link">03 Drift Analysis</a>
+      <a href="#alignment" class="nav-link">03 Alignment</a>
+      <a href="#drift" class="nav-link">04 Drift Analysis</a>
+      <a href="#architecture" class="nav-link">05 Architecture</a>
+      <a href="#roadmap" class="nav-link">06 Roadmap</a>
+      <a href="#insights" class="nav-link">07 Insights</a>
     </nav>
 
     <div class="nav-controls">
@@ -226,11 +230,106 @@
       </div>
     </section>
 
-    <!-- ================= 03 DRIFT ANALYSIS SECTION ================= -->
-    <section id="drift" class="section drift-section">
+    <!-- ================= 03 ALIGNMENT ANALYSIS ================= -->
+    <section id="alignment" class="section alignment-section">
       <div class="section-header">
         <div class="section-title-wrap">
           <span class="section-num">03</span>
+          <div>
+            <h2 class="section-title">PHONE-TO-VEHICLE ROLL/PITCH ALIGNMENT</h2>
+            <p class="section-subtitle">Gravity-Based Leveling (Phase 3)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="alignment-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 3rem;">
+        <div class="alignment-info">
+          <div class="insight-box">
+            <div class="insight-tag">ALIGNMENT METHOD</div>
+            <h3 class="insight-headline">Gravity-based leveling via Rodrigues minimal rotation</h3>
+            <p class="insight-body">
+              The current Phase 3 implementation performs ONLY phone-to-vehicle roll and pitch alignment. 
+              By averaging the static acceleration vector, the smartphone's coordinate frame is rotated 
+              such that its Z-axis aligns with true gravity.
+            </p>
+          </div>
+          
+          <div class="insight-box" style="margin-top: 1.5rem; background-color: #fdfbf7; border-left: 4px solid #C95232;">
+            <div class="insight-tag" style="color: #C95232;">CURRENT LIMITATION</div>
+            <h3 class="insight-headline">Absolute Yaw is NOT Solved</h3>
+            <ul class="insight-body" style="padding-left: 1.2rem; margin-top: 0.5rem;">
+              <li><strong>Why gravity isn't enough:</strong> Gravity only provides a 2D vertical reference (pitch and roll). Yaw exists in the orthogonal horizontal plane and cannot be observed from a static gravity vector alone.</li>
+              <li><strong>Why other sensors fail here:</strong> Magnetometers suffer from severe hard-iron/soft-iron distortions inside a metal vehicle chassis. Standard GNSS or motion-based yaw estimation can be highly unreliable due to urban canyons and vehicle dynamics.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="alignment-stats">
+          <div class="comparison-numbers" style="height: 100%;">
+            <div class="comp-col" style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
+              <div class="comp-header">CURRENT SEQUENCE METRICS</div>
+              <div class="comp-metric" style="margin-top: 1rem;">
+                <span class="comp-val" id="val-roll">-0.05</span><span class="comp-unit">°</span>
+              </div>
+              <div class="comp-sub">Estimated Roll Angle</div>
+              <div class="comp-metric" style="margin-top: 2rem;">
+                <span class="comp-val" id="val-pitch">0.25</span><span class="comp-unit">°</span>
+              </div>
+              <div class="comp-sub">Estimated Pitch Angle</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="comparison-table-wrapper" style="background: white; border: 1px solid #EAE7E1; padding: 1.5rem; border-radius: 4px;">
+        <h3 style="margin-top: 0; font-family: 'Space Grotesk', sans-serif; font-size: 1.2rem; color: #2F2626;">Phase 2 vs Phase 3 (Both Sequences)</h3>
+        <p style="color: #4A4440; font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.5;">
+          <strong>Engineering Interpretation:</strong> S-Vta1a shows a small improvement after roll/pitch alignment, while S-Vta2 shows regression. 
+          This demonstrates that alignment alone does not eliminate smartphone INS drift. Rotating the sensor frame does not remove 
+          uncompensated MEMS in-run bias. Without additional constraints or fusion, horizontal position error can remain extremely large.
+        </p>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+          <div style="border: 1px solid #EAE7E1; padding: 1.25rem; background-color: #FAFAFA;">
+            <div style="font-weight: 700; margin-bottom: 1rem; font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; color: #2F2626;">S-Vta1a Results</div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; padding: 0.5rem 0; border-bottom: 1px solid #EAE7E1; color: #4A4440;">
+              <span>Phase 2 Final Error:</span> <span id="tbl-vta1a-p2-err" style="font-family: 'JetBrains Mono', monospace; font-weight: 500;">353.00 km</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; padding: 0.5rem 0; border-bottom: 1px solid #EAE7E1; color: #4A4440;">
+              <span>Phase 3 Final Error:</span> <span id="tbl-vta1a-p3-err" style="font-family: 'JetBrains Mono', monospace; font-weight: 500;">352.36 km</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; padding: 0.5rem 0; border-bottom: 1px solid #EAE7E1; color: #4A4440;">
+              <span>Phase 2 RMSE:</span> <span id="tbl-vta1a-p2-rmse" style="font-family: 'JetBrains Mono', monospace; font-weight: 500;">171.17 km</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; padding: 0.5rem 0; color: #4A4440;">
+              <span>Phase 3 RMSE:</span> <span id="tbl-vta1a-p3-rmse" style="font-family: 'JetBrains Mono', monospace; font-weight: 500;">170.91 km</span>
+            </div>
+          </div>
+          
+          <div style="border: 1px solid #EAE7E1; padding: 1.25rem; background-color: #FAFAFA;">
+            <div style="font-weight: 700; margin-bottom: 1rem; font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; color: #2F2626;">S-Vta2 Results</div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; padding: 0.5rem 0; border-bottom: 1px solid #EAE7E1; color: #4A4440;">
+              <span>Phase 2 Final Error:</span> <span id="tbl-vta2-p2-err" style="font-family: 'JetBrains Mono', monospace; font-weight: 500;">218.37 km</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; padding: 0.5rem 0; border-bottom: 1px solid #EAE7E1; color: #4A4440;">
+              <span>Phase 3 Final Error:</span> <span id="tbl-vta2-p3-err" style="font-family: 'JetBrains Mono', monospace; font-weight: 500;">247.37 km</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; padding: 0.5rem 0; border-bottom: 1px solid #EAE7E1; color: #4A4440;">
+              <span>Phase 2 RMSE:</span> <span id="tbl-vta2-p2-rmse" style="font-family: 'JetBrains Mono', monospace; font-weight: 500;">109.42 km</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.9rem; padding: 0.5rem 0; color: #4A4440;">
+              <span>Phase 3 RMSE:</span> <span id="tbl-vta2-p3-rmse" style="font-family: 'JetBrains Mono', monospace; font-weight: 500;">122.78 km</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 04 DRIFT ANALYSIS SECTION ================= -->
+    <section id="drift" class="section drift-section">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <span class="section-num">04</span>
           <div>
             <h2 class="section-title">INERTIAL DRIFT ANALYSIS</h2>
             <p class="section-subtitle">Why Classical Dead Reckoning Diverges & Why AI is Required</p>
@@ -303,9 +402,233 @@
         </div>
       </div>
     </section>
+    <!-- ================= 05 SYSTEM ARCHITECTURE ================= -->
+    <section id="architecture" class="section architecture-section">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <span class="section-num">05</span>
+          <div>
+            <h2 class="section-title">SYSTEM ARCHITECTURE</h2>
+            <p class="section-subtitle">Current Baseline vs. Planned Integration</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="arch-container">
+        <div class="status-header" style="margin-bottom: 1.5rem; display: flex; flex-direction: column;">
+          <span class="block-tag">CURRENT / IMPLEMENTED PIPELINE</span>
+        </div>
+        <div class="status-grid" style="margin-bottom: 3rem; grid-template-columns: repeat(4, 1fr);">
+          <div class="status-card complete">
+            <div class="card-status-badge">IMPLEMENTED</div>
+            <div class="card-title" style="font-size: 0.9rem;">1. IO-VNBD Dataset</div>
+          </div>
+          <div class="status-card complete">
+            <div class="card-status-badge">IMPLEMENTED</div>
+            <div class="card-title" style="font-size: 0.9rem;">2. Data Validation &amp; Preprocessing</div>
+          </div>
+          <div class="status-card complete">
+            <div class="card-status-badge">IMPLEMENTED</div>
+            <div class="card-title" style="font-size: 0.9rem;">3. Geodetic &rarr; ENU conversion</div>
+          </div>
+          <div class="status-card complete">
+            <div class="card-status-badge">IMPLEMENTED</div>
+            <div class="card-title" style="font-size: 0.9rem;">4. Gravity compensation &amp; filtering</div>
+          </div>
+          <div class="status-card complete">
+            <div class="card-status-badge">IMPLEMENTED</div>
+            <div class="card-title" style="font-size: 0.9rem;">5. Classical Strapdown INS</div>
+          </div>
+          <div class="status-card complete">
+            <div class="card-status-badge">IMPLEMENTED</div>
+            <div class="card-title" style="font-size: 0.9rem;">6. Phone-to-Vehicle Alignment</div>
+          </div>
+          <div class="status-card complete">
+            <div class="card-status-badge">IMPLEMENTED</div>
+            <div class="card-title" style="font-size: 0.9rem;">7. Trajectory &amp; Drift Analysis</div>
+          </div>
+        </div>
+
+        <div class="status-header" style="margin-bottom: 1.5rem; display: flex; flex-direction: column;">
+          <span class="block-tag">FUTURE / PLANNED PIPELINE</span>
+          <span class="block-note">Modules below are not currently operational</span>
+        </div>
+        <div class="status-grid" style="grid-template-columns: repeat(4, 1fr);">
+          <div class="status-card planned">
+            <div class="card-status-badge planned-badge">PLANNED (FUTURE)</div>
+            <div class="card-title" style="font-size: 0.9rem;">8. AI Speed Estimation</div>
+          </div>
+          <div class="status-card planned">
+            <div class="card-status-badge planned-badge">PLANNED (FUTURE)</div>
+            <div class="card-title" style="font-size: 0.9rem;">9. Motion/Vibration Classification</div>
+          </div>
+          <div class="status-card planned">
+            <div class="card-status-badge planned-badge">PLANNED (FUTURE)</div>
+            <div class="card-title" style="font-size: 0.9rem;">10. AI Nav Error Correction</div>
+          </div>
+          <div class="status-card planned">
+            <div class="card-status-badge planned-badge">PLANNED (FUTURE)</div>
+            <div class="card-title" style="font-size: 0.9rem;">11. EKF/UKF Sensor Fusion</div>
+          </div>
+          <div class="status-card planned">
+            <div class="card-status-badge planned-badge">PLANNED (FUTURE)</div>
+            <div class="card-title" style="font-size: 0.9rem;">12. Non-Holonomic Constraints</div>
+          </div>
+          <div class="status-card planned">
+            <div class="card-status-badge planned-badge">PLANNED (FUTURE)</div>
+            <div class="card-title" style="font-size: 0.9rem;">13. Offline OSM Map Matching</div>
+          </div>
+          <div class="status-card planned">
+            <div class="card-status-badge planned-badge">PLANNED (FUTURE)</div>
+            <div class="card-title" style="font-size: 0.9rem;">14. GNSS Fusion / Recovery</div>
+          </div>
+          <div class="status-card planned">
+            <div class="card-status-badge planned-badge">PLANNED (FUTURE)</div>
+            <div class="card-title" style="font-size: 0.9rem;">15. Route Guidance</div>
+          </div>
+          <div class="status-card planned">
+            <div class="card-status-badge planned-badge">PLANNED (FUTURE)</div>
+            <div class="card-title" style="font-size: 0.9rem;">16. Mobile/Edge Deployment</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 06 TECHNICAL ROADMAP ================= -->
+    <section id="roadmap" class="section roadmap-section">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <span class="section-num">06</span>
+          <div>
+            <h2 class="section-title">TECHNICAL ROADMAP</h2>
+            <p class="section-subtitle">Progression Toward the Final IDR-NAV System</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="roadmap-intro" style="margin-bottom: 2rem; padding: 1.5rem; background-color: var(--color-white); border: 1px solid var(--color-border); border-radius: 4px;">
+        <p style="margin: 0; font-size: 0.95rem; line-height: 1.6; color: var(--color-charcoal);">
+          <strong>Research Context:</strong> The current experiments clearly demonstrate the limitations of pure smartphone inertial navigation. Even with mathematically perfect gravity leveling (Phase 3), consumer MEMS sensor bias leads to unbounded integration drift. This baseline thoroughly motivates the necessity for the upcoming stages of intelligent fusion and constraints.
+        </p>
+      </div>
+
+      <div class="roadmap-stages" style="display: flex; flex-direction: column; gap: 1rem;">
+        
+        <!-- CURRENT -->
+        <div class="roadmap-stage" style="display: flex; border: 1px solid var(--color-tan); background-color: var(--color-tan-light); border-radius: 4px; overflow: hidden;">
+          <div class="stage-label" style="background-color: var(--color-tan); color: var(--color-white); padding: 1.5rem; width: 150px; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-weight: 700; letter-spacing: 0.05em; text-align: center;">CURRENT</div>
+          <div class="stage-content" style="padding: 1.5rem; flex-grow: 1;">
+            <ul style="margin: 0; padding-left: 1.2rem; color: var(--color-charcoal); font-size: 0.95rem; line-height: 1.6;">
+              <li>Phase 1&ndash;3 Implemented</li>
+              <li>Validated data pipeline</li>
+              <li>Classical INS baseline</li>
+              <li>Roll/pitch alignment</li>
+              <li>Real drift analysis</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- NEXT -->
+        <div class="roadmap-stage" style="display: flex; border: 1px solid var(--color-border); background-color: var(--color-white); border-radius: 4px; overflow: hidden;">
+          <div class="stage-label" style="background-color: var(--color-bg-subtle); color: var(--color-charcoal); padding: 1.5rem; width: 150px; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-weight: 700; letter-spacing: 0.05em; text-align: center; border-right: 1px solid var(--color-border);">NEXT (PLANNED)</div>
+          <div class="stage-content" style="padding: 1.5rem; flex-grow: 1;">
+            <ul style="margin: 0; padding-left: 1.2rem; color: var(--color-warm-gray); font-size: 0.95rem; line-height: 1.6;">
+              <li>AI-based speed estimation</li>
+              <li>Motion/vibration understanding</li>
+              <li>Navigation error modelling/correction</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- THEN -->
+        <div class="roadmap-stage" style="display: flex; border: 1px solid var(--color-border); background-color: var(--color-white); border-radius: 4px; overflow: hidden;">
+          <div class="stage-label" style="background-color: var(--color-bg-subtle); color: var(--color-charcoal); padding: 1.5rem; width: 150px; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-weight: 700; letter-spacing: 0.05em; text-align: center; border-right: 1px solid var(--color-border);">THEN (PLANNED)</div>
+          <div class="stage-content" style="padding: 1.5rem; flex-grow: 1;">
+            <ul style="margin: 0; padding-left: 1.2rem; color: var(--color-warm-gray); font-size: 0.95rem; line-height: 1.6;">
+              <li>EKF/UKF sensor fusion</li>
+              <li>Vehicle constraints / NHC</li>
+              <li>Map matching</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- FINAL SYSTEM -->
+        <div class="roadmap-stage" style="display: flex; border: 1px solid var(--color-charcoal); background-color: var(--color-white); border-radius: 4px; overflow: hidden;">
+          <div class="stage-label" style="background-color: var(--color-charcoal); color: var(--color-white); padding: 1.5rem; width: 150px; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-weight: 700; letter-spacing: 0.05em; text-align: center;">FINAL SYSTEM (PLANNED)</div>
+          <div class="stage-content" style="padding: 1.5rem; flex-grow: 1;">
+            <ul style="margin: 0; padding-left: 1.2rem; color: var(--color-warm-gray); font-size: 0.95rem; line-height: 1.6;">
+              <li>GNSS + INS fusion</li>
+              <li>GNSS-denied continuity</li>
+              <li>GNSS recovery</li>
+              <li>Navigation/product integration</li>
+              <li>Edge/mobile deployment</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- ================= 07 ENGINEERING INSIGHTS & CONCLUSION ================= -->
+    <section id="insights" class="section insights-section">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <span class="section-num">07</span>
+          <div>
+            <h2 class="section-title">ENGINEERING INSIGHTS &amp; CONCLUSION</h2>
+            <p class="section-subtitle">Summary of Phase 1&ndash;3 Baseline Findings</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="insights-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
+        
+        <!-- INSIGHT 1 -->
+        <div class="insight-box" style="background-color: var(--color-white); border: 1px solid var(--color-border); padding: 1.5rem; border-radius: 4px;">
+          <div class="insight-tag" style="color: var(--color-charcoal); font-weight: 700; margin-bottom: 0.5rem; display: inline-block;">INSIGHT 1</div>
+          <h3 class="insight-headline" style="font-size: 1.1rem; margin-bottom: 0.75rem;">Classical smartphone INS accumulates severe drift.</h3>
+          <p class="insight-body" style="font-size: 0.95rem; color: var(--color-warm-gray); line-height: 1.5; margin: 0;">
+            Integrating consumer-grade IMU measurements over time produces rapidly growing position error because of sensor noise and bias. Double-integration without external updates causes the trajectory to quickly diverge from ground truth.
+          </p>
+        </div>
+
+        <!-- INSIGHT 2 -->
+        <div class="insight-box" style="background-color: var(--color-white); border: 1px solid var(--color-border); padding: 1.5rem; border-radius: 4px;">
+          <div class="insight-tag" style="color: var(--color-charcoal); font-weight: 700; margin-bottom: 0.5rem; display: inline-block;">INSIGHT 2</div>
+          <h3 class="insight-headline" style="font-size: 1.1rem; margin-bottom: 0.75rem;">Phone orientation matters.</h3>
+          <p class="insight-body" style="font-size: 0.95rem; color: var(--color-warm-gray); line-height: 1.5; margin: 0;">
+            The smartphone's mounting orientation differs from the vehicle reference frame. Sensor measurements exist in the device frame, making phone-to-vehicle alignment an essential prerequisite before interpreting forward or lateral acceleration.
+          </p>
+        </div>
+
+        <!-- INSIGHT 3 -->
+        <div class="insight-box" style="background-color: var(--color-white); border: 1px solid var(--color-border); padding: 1.5rem; border-radius: 4px;">
+          <div class="insight-tag" style="color: var(--color-charcoal); font-weight: 700; margin-bottom: 0.5rem; display: inline-block;">INSIGHT 3</div>
+          <h3 class="insight-headline" style="font-size: 1.1rem; margin-bottom: 0.75rem;">Roll/pitch alignment alone is insufficient.</h3>
+          <p class="insight-body" style="font-size: 0.95rem; color: var(--color-warm-gray); line-height: 1.5; margin: 0;">
+            Comparing Phase 2 and Phase 3 reveals that while S-Vta1a showed a small improvement, S-Vta2 exhibited a regression. This explicitly demonstrates that mathematically leveling gravity does not eliminate accumulated inertial drift in the horizontal plane.
+          </p>
+        </div>
+
+        <!-- INSIGHT 4 -->
+        <div class="insight-box" style="background-color: var(--color-bg-subtle); border: 1px solid var(--color-border); border-top: 3px solid var(--color-tan); padding: 1.5rem; border-radius: 4px;">
+          <div class="insight-tag" style="color: var(--color-tan-dark); font-weight: 700; margin-bottom: 0.5rem; display: inline-block;">INSIGHT 4</div>
+          <h3 class="insight-headline" style="font-size: 1.1rem; margin-bottom: 0.75rem;">Additional constraints &amp; sensor fusion are required.</h3>
+          <p class="insight-body" style="font-size: 0.95rem; color: var(--color-warm-gray); line-height: 1.5; margin: 0;">
+            The current baseline motivates future work. As a planned next step, the next stage of the system will involve AI-based motion and speed estimation, non-holonomic vehicle constraints, sensor fusion, and map information to bound error.
+          </p>
+        </div>
+
+      </div>
+
+      <!-- CONCLUSION -->
+      <div class="conclusion-box" style="background-color: var(--color-charcoal); color: var(--color-white); padding: 2rem; border-radius: 4px;">
+        <h3 style="font-family: var(--font-mono); font-size: 1.1rem; letter-spacing: 0.05em; margin-top: 0; margin-bottom: 1rem; color: var(--color-tan);">ENGINEERING CONCLUSION</h3>
+        <p style="font-size: 1rem; line-height: 1.6; margin: 0; color: var(--color-bg-subtle);">
+          The current Phase 1&ndash;3 implementation establishes a measurable classical INS baseline and demonstrates the limitations of smartphone-only inertial dead reckoning. Roll/pitch alignment addresses sensor-frame orientation but does not remove accumulated inertial drift. The results motivate the next stages of IDR-NAV involving intelligent estimation, sensor fusion, vehicle constraints, and map information.
+        </p>
+      </div>
+    </section>
 
   </main>
-
   <footer class="dashboard-footer">
     <div class="footer-left">
       <span class="footer-brand">IDR-NAV</span>

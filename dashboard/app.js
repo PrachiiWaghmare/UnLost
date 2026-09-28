@@ -46,6 +46,8 @@
     p3Rmse: document.getElementById('p3-rmse'),
     p3Drift: document.getElementById('p3-drift'),
     valDelta: document.getElementById('val-delta'),
+    valRoll: document.getElementById('val-roll'),
+    valPitch: document.getElementById('val-pitch'),
     btnScaleFull: document.getElementById('btn-scale-full'),
     btnScaleZoom: document.getElementById('btn-scale-zoom'),
     canvasTrajectory: document.getElementById('trajectory-canvas'),
@@ -88,6 +90,52 @@
     }, 150));
 
     setupCanvasHover();
+    setupNavLinks();
+  }
+
+  /**
+   * Setup Navigation Link Scroll Observer
+   */
+  function setupNavLinks() {
+    const navLinks = document.querySelectorAll('.nav-link');
+    const sections = Array.from(navLinks).map(link => {
+      const id = link.getAttribute('href').substring(1);
+      return document.getElementById(id);
+    }).filter(Boolean);
+
+    const observer = new IntersectionObserver((entries) => {
+      let activeSectionId = null;
+      
+      // Find the most visible intersecting section
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          activeSectionId = entry.target.id;
+        }
+      });
+
+      if (activeSectionId) {
+        navLinks.forEach(link => {
+          if (link.getAttribute('href') === `#${activeSectionId}`) {
+            link.classList.add('active');
+          } else {
+            link.classList.remove('active');
+          }
+        });
+      }
+    }, {
+      rootMargin: '-20% 0px -60% 0px',
+      threshold: 0
+    });
+
+    sections.forEach(section => observer.observe(section));
+
+    // Also keep the click listener for immediate feedback
+    navLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        navLinks.forEach(nav => nav.classList.remove('active'));
+        e.currentTarget.classList.add('active');
+      });
+    });
   }
 
   function setupDashboard() {
@@ -146,6 +194,11 @@
     dom.p3FinalErr.textContent = m.p3_final_err_km.toFixed(1);
     dom.p3Rmse.textContent = m.p3_rmse_km.toFixed(1);
     dom.p3Drift.textContent = m.p3_drift_pct.toFixed(1);
+
+    if (dom.valRoll && dom.valPitch) {
+      dom.valRoll.textContent = m.roll_tilt_deg.toFixed(2);
+      dom.valPitch.textContent = m.pitch_tilt_deg.toFixed(2);
+    }
 
     const sign = m.delta_final_km >= 0 ? '+' : '';
     dom.valDelta.textContent = `${sign}${m.delta_final_km.toFixed(2)} km (${sign}${(m.p3_drift_pct - m.p2_drift_pct).toFixed(1)}% drift change)`;
