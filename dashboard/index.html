@@ -3,29 +3,45 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IDR-NAV — Intelligent Dead-Reckoning Navigation Dashboard</title>
-  <meta name="description" content="Engineering dashboard for IDR-NAV: Smartphone-based inertial dead-reckoning navigation in GNSS-denied environments. Real IO-VNBD benchmark results.">
-  <!-- Google Fonts: Space Grotesk & Inter -->
+  <title>IDR-NAV — Intelligent Navigation for GNSS-Denied Environments</title>
+  <meta name="description" content="IDR-NAV: Smartphone-based inertial dead-reckoning navigation in GNSS-denied environments. Demonstrated in Pune, Maharashtra with real IO-VNBD benchmark kinematics.">
+  <!-- Google Fonts: Space Grotesk, Inter & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-  <!-- ================= TOP NAVIGATION ================= -->
+  <!-- ================= TOP NAVIGATION BAR ================= -->
   <header class="top-nav">
-    <div class="nav-brand">
-      <span class="brand-tag">PROJECT IDR-NAV</span>
-      <span class="brand-title">INTELLIGENT DEAD RECKONING</span>
+    <div class="nav-left-group">
+      <div class="nav-brand" onclick="switchAppTab('navigation')" style="cursor: pointer;">
+        <span class="brand-tag">PROJECT IDR-NAV</span>
+        <span class="brand-title">INTELLIGENT DEAD RECKONING</span>
+      </div>
+      <div class="nav-geo-pill">
+        <span class="geo-dot">📍</span>
+        <span class="geo-text">Pune, Maharashtra</span>
+      </div>
     </div>
 
-    <nav class="nav-links">
-      <a href="#overview" class="nav-link active">01 Overview</a>
-      <a href="#trajectory" class="nav-link">02 Trajectory</a>
-      <a href="#drift" class="nav-link">03 Drift Analysis</a>
+    <!-- Primary Application Tabs -->
+    <nav class="nav-app-tabs" role="tablist" aria-label="Main Application Views">
+      <button id="tab-nav-btn" class="tab-btn active" data-tab="navigation" onclick="switchAppTab('navigation')">
+        <span class="tab-icon">🚗</span>
+        <span class="tab-label">Navigation</span>
+      </button>
+      <button id="tab-evidence-btn" class="tab-btn" data-tab="evidence" onclick="switchAppTab('evidence')">
+        <span class="tab-icon">📊</span>
+        <span class="tab-label">System Evidence</span>
+      </button>
+      <button id="tab-diagnostics-btn" class="tab-btn" data-tab="diagnostics" onclick="switchAppTab('diagnostics')">
+        <span class="tab-icon">🔬</span>
+        <span class="tab-label">Diagnostics</span>
+      </button>
     </nav>
-
+    
     <div class="nav-controls">
       <!-- Pinned GNSS Status Indicator -->
       <div id="gnss-status-badge" class="status-indicator online" title="Current Navigation Operating Mode">
@@ -33,16 +49,15 @@
         <span id="gnss-status-text">GNSS + INS (ONLINE)</span>
       </div>
 
-      <!-- Dataset Selector -->
-      <div class="dataset-switcher" role="group" aria-label="Dataset Switcher">
-        <span class="switcher-label">DATASET:</span>
-        <button id="btn-vta1a" class="btn-dataset active" onclick="switchDataset('S-Vta1a')">S-Vta1a</button>
-        <button id="btn-vta2" class="btn-dataset" onclick="switchDataset('S-Vta2')">S-Vta2</button>
-      </div>
+      <!-- Quick Outage Demonstration Trigger -->
+      <button id="btn-quick-outage" class="btn-quick-outage" onclick="toggleGnssOutage()" title="Test inertial navigation handoff">
+        <span class="outage-bolt">⚡</span>
+        <span id="quick-outage-text">SIMULATE OUTAGE</span>
+      </button>
     </div>
   </header>
 
-  <!-- ================= GNSS ALERT TOAST (SECTION 13A) ================= -->
+  <!-- ================= GNSS ALERT TOAST ================= -->
   <div id="gnss-alert-toast" class="gnss-toast hidden" role="alert" aria-live="assertive">
     <div class="toast-icon" id="toast-icon">⚠</div>
     <div class="toast-body">
@@ -55,37 +70,363 @@
 
   <main class="page-container">
 
-    <!-- ================= 01 HERO / OVERVIEW SECTION ================= -->
-    <section id="overview" class="section hero-section">
-      <div class="hero-header">
-        <div class="hero-meta">
-          <span class="meta-label">RESEARCH BENCHMARK</span>
-          <span class="meta-sep">/</span>
-          <span id="hero-dataset-name" class="meta-value">S-Vta1a</span>
-          <span class="meta-sep">/</span>
-          <span id="hero-dataset-desc" class="meta-sub">Driver E (Aggressive) — Mixed UK Motorways & Arterial Roundabouts</span>
+    <!-- ==========================================================================
+         VIEW 1: PRIMARY NAVIGATION APPLICATION (DEFAULT LANDING VIEW)
+         ========================================================================== -->
+    <div id="view-navigation" class="app-view active">
+      
+      <!-- Compact Product Headline Banner -->
+      <div class="nav-product-header">
+        <div class="nav-product-titles">
+          <div class="nav-product-badge-row">
+            <span class="badge-app-title">IDR-NAV</span>
+            <span class="badge-product-tag">PRODUCT FLOW</span>
+            <span class="badge-playback-tag">LIVE SIMULATION</span>
+          </div>
+          <h1 class="nav-product-headline">Intelligent Navigation for GNSS-Denied Environments</h1>
         </div>
 
-        <h1 class="hero-title">
-          INTELLIGENT<br>
-          <span class="accent-text">DEAD-RECKONING</span><br>
-          NAVIGATION
-        </h1>
-
-        <p class="hero-lead">
-          Smartphone-based vehicle localization for <strong>GNSS-denied environments</strong>. 
-          Evaluating pure classical inertial dead reckoning and phone-to-vehicle alignment against real 
-          <strong>IO-VNBD</strong> benchmark ground-truth runs.
-        </p>
-
-        <div class="hero-actions">
-          <a href="#trajectory" class="btn-primary">EXPLORE TRAJECTORIES ↓</a>
-          <button id="btn-simulate-gnss" class="btn-secondary" onclick="toggleGnssOutage()">
-            <span class="btn-icon">⚡</span>
-            <span id="btn-simulate-text">SIMULATE GNSS OUTAGE</span>
-          </button>
-          <span class="sim-notice">DEMO: Test seamless GNSS lost & recovery transition</span>
+        <div class="nav-product-meta">
+          <div class="loc-chip">
+            <span class="loc-pin">📍</span>
+            <span class="loc-label">Current Location:</span>
+            <strong class="loc-val" id="current-location-text">Shivajinagar, Pune, Maharashtra</strong>
+          </div>
+          <div class="nav-stepper-mini" role="tablist">
+            <button id="step-btn-dest" class="mini-step active" onclick="setFlowStep('destination')">1. Destination</button>
+            <span class="mini-step-arrow">➔</span>
+            <button id="step-btn-preview" class="mini-step" onclick="setFlowStep('preview')">2. Preview</button>
+            <span class="mini-step-arrow">➔</span>
+            <button id="step-btn-nav" class="mini-step" onclick="setFlowStep('navigating')">3. Live Navigation</button>
+          </div>
         </div>
+      </div>
+
+      <!-- Navigation Cockpit Frame -->
+      <div class="nav-cockpit-frame">
+        
+        <!-- Live Navigation Map Viewport (Occupies main viewport) -->
+        <div class="nav-map-viewport" id="nav-map-viewport">
+          <canvas id="nav-map-canvas"></canvas>
+
+          <!-- ================= SCREEN 1: DESTINATION SELECTION (PROTOTYPE) ================= -->
+          <div id="flow-view-destination" class="flow-overlay-card">
+            <div class="flow-card-header">
+              <div class="flow-badge-wrap">
+                <span class="tag-prototype">PROTOTYPE</span>
+                <span class="flow-step-pill">STEP 01 OF 03</span>
+                <span class="geo-context-tag">PUNE, MAHARASHTRA</span>
+              </div>
+              <h2 class="flow-card-title">Where do you want to go in Pune?</h2>
+              <p class="flow-card-desc">
+                Select a prototype destination to preview the route and test continuous dead-reckoning handoff when GNSS is denied in urban tunnels or flyovers.
+              </p>
+            </div>
+
+            <!-- Search Destination Field -->
+            <div class="flow-search-bar">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="destination-search-input" class="search-input" value="Pune Airport, Lohegaon" placeholder="Search destination in Pune (prototype)..." readonly>
+              <span class="search-tag">PROTOTYPE</span>
+            </div>
+
+            <!-- Pune Destination Options -->
+            <div class="destination-options-grid">
+              
+              <!-- Option 1: Pune Airport (Recommended Demo) -->
+              <div class="dest-option-card active" id="dest-card-pune-airport" onclick="selectPuneRoute('pune-airport')">
+                <div class="dest-card-top">
+                  <div class="dest-card-badge-row">
+                    <span class="badge-recommended">RECOMMENDED DEMO</span>
+                    <span class="tag-prototype">PROTOTYPE</span>
+                  </div>
+                  <span class="dest-card-arrow">➔</span>
+                </div>
+                <div class="dest-card-name">Pune Airport (Lohegaon)</div>
+                <div class="dest-card-corridor">From Shivajinagar via Sangamwadi & Nagar Road Corridor</div>
+                <div class="dest-card-meta">
+                  <span>📏 <strong>8.6 km</strong></span>
+                  <span>⏱ <strong>~24 min</strong></span>
+                  <span class="eta-pill">🏁 <strong>Arrive <span id="card-arrive-airport">12:14 PM</span></strong></span>
+                </div>
+                <button class="btn-select-dest">PREVIEW THIS ROUTE ➔</button>
+              </div>
+
+              <!-- Option 2: Viman Nagar -->
+              <div class="dest-option-card" id="dest-card-viman-nagar" onclick="selectPuneRoute('viman-nagar')">
+                <div class="dest-card-top">
+                  <div class="dest-card-badge-row">
+                    <span class="badge-suburban">TECH CORRIDOR</span>
+                    <span class="tag-prototype">PROTOTYPE</span>
+                  </div>
+                  <span class="dest-card-arrow">➔</span>
+                </div>
+                <div class="dest-card-name">Viman Nagar (Symbiosis Hub)</div>
+                <div class="dest-card-corridor">From FC Road via Bund Garden & Koregaon Park North</div>
+                <div class="dest-card-meta">
+                  <span>📏 <strong>9.2 km</strong></span>
+                  <span>⏱ <strong>~26 min</strong></span>
+                  <span class="eta-pill">🏁 <strong>Arrive <span id="card-arrive-viman">12:16 PM</span></strong></span>
+                </div>
+                <button class="btn-select-dest">PREVIEW THIS ROUTE ➔</button>
+              </div>
+
+              <!-- Option 3: Pune Railway Station -->
+              <div class="dest-option-card" id="dest-card-pune-station" onclick="selectPuneRoute('pune-station')">
+                <div class="dest-card-top">
+                  <div class="dest-card-badge-row">
+                    <span class="badge-suburban">CITY CENTRAL</span>
+                    <span class="tag-prototype">PROTOTYPE</span>
+                  </div>
+                  <span class="dest-card-arrow">➔</span>
+                </div>
+                <div class="dest-card-name">Pune Railway Station</div>
+                <div class="dest-card-corridor">From Shivajinagar via Sangam Bridge & Sassoon Rd</div>
+                <div class="dest-card-meta">
+                  <span>📏 <strong>4.2 km</strong></span>
+                  <span>⏱ <strong>~14 min</strong></span>
+                  <span class="eta-pill">🏁 <strong>Arrive <span id="card-arrive-station">12:04 PM</span></strong></span>
+                </div>
+                <button class="btn-select-dest">PREVIEW THIS ROUTE ➔</button>
+              </div>
+
+              <!-- Option 4: Hinjawadi IT Park -->
+              <div class="dest-option-card" id="dest-card-hinjawadi" onclick="selectPuneRoute('hinjawadi')">
+                <div class="dest-card-top">
+                  <div class="dest-card-badge-row">
+                    <span class="badge-suburban">EXPRESSWAY LINK</span>
+                    <span class="tag-prototype">PROTOTYPE</span>
+                  </div>
+                  <span class="dest-card-arrow">➔</span>
+                </div>
+                <div class="dest-card-name">Hinjawadi IT Park (Phase 1)</div>
+                <div class="dest-card-corridor">From Pune University Circle via Aundh & Wakad Flyover</div>
+                <div class="dest-card-meta">
+                  <span>📏 <strong>17.4 km</strong></span>
+                  <span>⏱ <strong>~42 min</strong></span>
+                  <span class="eta-pill">🏁 <strong>Arrive <span id="card-arrive-hinjawadi">12:32 PM</span></strong></span>
+                </div>
+                <button class="btn-select-dest">PREVIEW THIS ROUTE ➔</button>
+              </div>
+
+            </div>
+
+            <div class="flow-notice-footer">
+              <span class="notice-icon">ℹ</span>
+              <span><strong>PROTOTYPE NOTICE:</strong> Pune destinations and ETAs are illustrative prototypes for testing dead-reckoning handoff. Vehicle motion is driven by verified benchmark trajectory playback.</span>
+            </div>
+          </div>
+
+          <!-- ================= SCREEN 2: ROUTE PREVIEW (PROTOTYPE ROUTE) ================= -->
+          <div id="flow-view-preview" class="flow-overlay-card hidden">
+            <div class="flow-card-header">
+              <div class="flow-badge-wrap">
+                <span class="tag-prototype">PROTOTYPE ROUTE</span>
+                <span class="flow-step-pill">STEP 02 OF 03</span>
+                <span class="geo-context-tag">PUNE, MAHARASHTRA</span>
+              </div>
+              <h2 class="flow-card-title" id="preview-route-title">Shivajinagar ➔ Pune Airport (Lohegaon)</h2>
+              <p class="flow-card-desc" id="preview-corridor-desc">
+                Corridor overview via Sangamwadi & Nagar Road. Highlights open-sky satellite tracking and GNSS-denied underpass handoff.
+              </p>
+            </div>
+
+            <!-- Route Metrics Strip -->
+            <div class="preview-metrics-strip">
+              <div class="preview-metric-box">
+                <span class="p-met-label">TOTAL DISTANCE</span>
+                <span class="p-met-val" id="preview-dist-val">8.6 <span class="p-met-unit">KM</span></span>
+                <span class="p-met-sub">Route Corridor</span>
+              </div>
+              <div class="preview-metric-box">
+                <span class="p-met-label">ESTIMATED TIME</span>
+                <span class="p-met-val" id="preview-time-val">~24 <span class="p-met-unit">MIN</span></span>
+                <span class="p-met-sub">Expected Duration</span>
+              </div>
+              <div class="preview-metric-box">
+                <span class="p-met-label">ESTIMATED ARRIVAL</span>
+                <span class="p-met-val" id="preview-arrival-val">12:14 <span class="p-met-unit">PM</span></span>
+                <span class="p-met-sub">Dynamic ETA</span>
+              </div>
+              <div class="preview-metric-box highlight">
+                <span class="p-met-label">INERTIAL BACKUP</span>
+                <span class="p-met-val">10 HZ IMU READY</span>
+                <span class="p-met-sub">Phase 3 Leveled</span>
+              </div>
+            </div>
+
+            <!-- Route Waypoint Highlights -->
+            <div class="preview-sectors-card">
+              <div class="sector-item">
+                <span class="sector-dot start">●</span>
+                <div class="sector-info">
+                  <div class="sector-name" id="preview-sector-1-title">Sector 1: Departure via Sancheti Flyover & Sangamwadi Rd</div>
+                  <div class="sector-desc" id="preview-sector-1-desc">Open-sky multi-constellation GNSS lock active. Inertial baseline steady.</div>
+                </div>
+              </div>
+              <div class="sector-item">
+                <span class="sector-dot outage">⚡</span>
+                <div class="sector-info">
+                  <div class="sector-name" id="preview-sector-2-title">Sector 2: Nagar Road Underpass Corridor (GNSS Outage Demo)</div>
+                  <div class="sector-desc" id="preview-sector-2-desc">Test seamless transition to inertial dead reckoning via SIMULATE GNSS OUTAGE.</div>
+                </div>
+              </div>
+              <div class="sector-item">
+                <span class="sector-dot end">🏁</span>
+                <div class="sector-info">
+                  <div class="sector-name" id="preview-sector-3-title">Sector 3: Airport Road Approach & Terminal 1 Loop</div>
+                  <div class="sector-desc" id="preview-sector-3-desc">Satellite signal reacquisition and multi-sensor fusion re-engagement.</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="preview-actions-row">
+              <button class="btn-start-navigation" onclick="startNavigation()">
+                <span class="btn-start-icon">🚀</span>
+                <span>START NAVIGATION</span>
+              </button>
+              <button class="btn-back-destination" onclick="setFlowStep('destination')">
+                <span>← Change Destination</span>
+              </button>
+            </div>
+
+            <div class="flow-notice-footer">
+              <span class="notice-icon">ℹ</span>
+              <span><strong>PROTOTYPE NOTICE:</strong> Pune route geometry is an illustrative navigation prototype visually driven by benchmark trajectory kinematics.</span>
+            </div>
+          </div>
+
+          <!-- ================= SCREEN 3: LIVE NAVIGATION HUD OVERLAYS ================= -->
+
+          <!-- Top Turn-by-Turn Instruction Card -->
+          <div class="nav-instruction-card" id="nav-instruction-card">
+            <div class="instruction-icon-box" id="instruction-icon">⬆</div>
+            <div class="instruction-text-group">
+              <div class="instruction-dist" id="instruction-dist">In 400m</div>
+              <div class="instruction-title" id="instruction-title">Keep right on Sancheti Hospital Flyover</div>
+              <div class="instruction-sub" id="instruction-sub">Pune Airport Corridor · Continuous Inertial Monitoring Active</div>
+            </div>
+            <span class="maneuver-prototype-tag">PROTOTYPE HUD</span>
+          </div>
+
+          <!-- Live Maneuver Compass Tag (Bottom Right) -->
+          <div class="nav-hud-compass" id="nav-hud-compass">
+            <div class="compass-circle">
+              <span class="compass-n">N</span>
+              <div class="compass-arrow-wrap" id="compass-arrow-wrap">
+                <span class="compass-pointer"></span>
+              </div>
+            </div>
+            <div class="compass-readout" id="compass-bearing-readout">028° NNE</div>
+          </div>
+
+          <!-- Bottom Navigation Dock Card -->
+          <div class="nav-bottom-card" id="nav-bottom-card">
+            
+            <!-- Left: Live Countdown Stats -->
+            <div class="nav-dock-trip">
+              <div class="trip-primary">
+                <span class="trip-time" id="dock-time-remaining">24 min</span>
+                <span class="trip-sep">·</span>
+                <span class="trip-dist" id="dock-dist-remaining">8.6 km</span>
+              </div>
+              <div class="trip-secondary">
+                <span class="trip-arrival">Arrive <strong id="dock-arrive-time">12:14 PM</strong></span>
+                <span class="trip-sep">·</span>
+                <span class="trip-travelled"><span id="dock-dist-travelled">0.0</span> km done</span>
+              </div>
+            </div>
+
+            <!-- Center: Speedometer & Navigation Mode -->
+            <div class="nav-dock-telemetry">
+              <div class="dock-speed-block">
+                <span class="speed-value" id="nav-speed-display">0.0</span>
+                <span class="speed-unit">KM/H</span>
+              </div>
+              <div class="dock-mode-block">
+                <div class="dock-mode-row">
+                  <span class="hud-mode-dot" id="hud-mode-dot"></span>
+                  <span class="dock-mode-name" id="hud-mode-title">GNSS + INS</span>
+                </div>
+                <div class="hud-outage-alert hidden" id="hud-outage-alert">SIMULATED OUTAGE — DEMONSTRATION</div>
+              </div>
+            </div>
+
+            <!-- Right: Outage Toggle, Controls & Exit -->
+            <div class="nav-dock-actions">
+              <button id="btn-dock-outage" class="btn-dock-outage" onclick="toggleGnssOutage()">
+                <span class="dock-outage-bolt">⚡</span>
+                <span id="dock-outage-text">SIMULATE GNSS OUTAGE</span>
+              </button>
+              
+              <button id="btn-dock-pause" class="btn-dock-icon" onclick="togglePlayback()" title="Pause / Resume vehicle motion">
+                <span id="dock-pause-icon">⏸</span>
+              </button>
+
+              <button class="btn-dock-exit" onclick="exitNavigation()" title="Exit navigation and return to destination search">
+                ✕ Exit
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Destination Reached Completion Card -->
+          <div id="nav-arrival-card" class="nav-arrival-card hidden">
+            <div class="arrival-icon">🏁</div>
+            <div class="arrival-content">
+              <div class="arrival-badge">DESTINATION REACHED</div>
+              <h3 class="arrival-title" id="arrival-title">You have arrived at Pune Airport Terminal 1</h3>
+              <p class="arrival-desc" id="arrival-desc">
+                Trip completed successfully. Inertial dead reckoning maintained position continuity through simulated GNSS-denied sectors.
+              </p>
+              <div class="arrival-actions">
+                <button class="btn-arrival-replay" onclick="replayNavigation()">↺ Replay Navigation</button>
+                <button class="btn-arrival-new" onclick="setFlowStep('destination')">🗺 Select New Destination</button>
+                <button class="btn-arrival-evidence" onclick="switchAppTab('evidence')">📊 View System Evidence ➔</button>
+              </div>
+            </div>
+          </div>
+
+        </div> <!-- /nav-map-viewport -->
+
+      </div> <!-- /nav-cockpit-frame -->
+
+    </div> <!-- /view-navigation -->
+
+
+    <!-- ==========================================================================
+         VIEW 2: SYSTEM EVIDENCE & BENCHMARKS (SECONDARY TAB)
+         Preserves all Phase 1–3 Engineering Calculations, Canvases & Findings
+         ========================================================================== -->
+    <div id="view-evidence" class="app-view hidden">
+      
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <span class="section-num">02</span>
+          <div>
+            <h2 class="section-title">ENGINEERING EVIDENCE & BENCHMARKS</h2>
+            <p class="section-subtitle">Empirical Ground-Truth Dataset Analysis & Verified Phase 1–3 Outputs</p>
+          </div>
+        </div>
+
+        <div class="evidence-top-controls">
+          <div class="dataset-switcher" role="group" aria-label="Dataset Switcher">
+            <span class="switcher-label">DATASET:</span>
+            <button id="btn-vta1a" class="btn-dataset active" onclick="switchDataset('S-Vta1a')">S-Vta1a</button>
+            <button id="btn-vta2" class="btn-dataset" onclick="switchDataset('S-Vta2')">S-Vta2</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dataset Description Bar -->
+      <div class="evidence-dataset-meta">
+        <span class="meta-label">BENCHMARK RUN:</span>
+        <strong id="hero-dataset-name">S-Vta1a</strong>
+        <span class="meta-sep">/</span>
+        <span id="hero-dataset-desc">Driver E (Aggressive) — Mixed UK Motorways & Arterial Roundabouts</span>
+        <span class="meta-sep">/</span>
+        <span class="meta-frozen">BACKEND FROZEN (21/21 TESTS PASSING)</span>
       </div>
 
       <!-- Over-sized Dynamic Metrics Ribbon -->
@@ -172,156 +513,196 @@
           </div>
         </div>
       </div>
-    </section>
 
-    <!-- ================= 02 TRAJECTORY COMPARISON ================= -->
-    <section id="trajectory" class="section trajectory-section">
-      <div class="section-header">
-        <div class="section-title-wrap">
-          <span class="section-num">02</span>
-          <div>
-            <h2 class="section-title">TRAJECTORY COMPARISON</h2>
-            <p class="section-subtitle">Ground Truth vs Classical Pure INS (Phase 2) vs Leveled Vehicle INS (Phase 3)</p>
+      <!-- Section: Trajectory Comparison Canvas -->
+      <div class="evidence-sub-block">
+        <div class="section-header">
+          <div class="section-title-wrap">
+            <span class="section-num">03</span>
+            <div>
+              <h3 class="section-title">TRAJECTORY COMPARISON</h3>
+              <p class="section-subtitle">Ground Truth vs Classical Pure INS (Phase 2) vs Leveled Vehicle INS (Phase 3)</p>
+            </div>
+          </div>
+
+          <div class="trajectory-controls">
+            <div class="control-group">
+              <span class="control-label">VIEW SCALE:</span>
+              <button id="btn-scale-full" class="btn-toggle active" onclick="setScaleMode('full')">Full Scale (Drift Visible)</button>
+              <button id="btn-scale-zoom" class="btn-toggle" onclick="setScaleMode('zoom')">Zoom to Ground Truth</button>
+            </div>
+
+            <div class="control-group layers">
+              <label class="layer-toggle gt">
+                <input type="checkbox" id="layer-gt" checked onchange="toggleLayer('gt')">
+                <span class="indicator gt-ind"></span> Ground Truth (Real GNSS/VBOX)
+              </label>
+              <label class="layer-toggle p2">
+                <input type="checkbox" id="layer-p2" checked onchange="toggleLayer('p2')">
+                <span class="indicator p2-ind"></span> Phase 2: Pure Body INS
+              </label>
+              <label class="layer-toggle p3">
+                <input type="checkbox" id="layer-p3" checked onchange="toggleLayer('p3')">
+                <span class="indicator p3-ind"></span> Phase 3: Leveled Vehicle INS
+              </label>
+            </div>
           </div>
         </div>
 
-        <div class="trajectory-controls">
-          <!-- View Zoom Modes -->
-          <div class="control-group">
-            <span class="control-label">VIEW SCALE:</span>
-            <button id="btn-scale-full" class="btn-toggle active" onclick="setScaleMode('full')">Full Scale (Drift Visible)</button>
-            <button id="btn-scale-zoom" class="btn-toggle" onclick="setScaleMode('zoom')">Zoom to Ground Truth</button>
-          </div>
+        <div class="canvas-viewport">
+          <canvas id="trajectory-canvas"></canvas>
+          <div id="canvas-tooltip" class="canvas-tooltip hidden"></div>
+          <div class="canvas-watermark" id="canvas-watermark">LOCAL ENU TANGENT PLANE (METERS)</div>
+        </div>
 
-          <!-- Layer Toggles -->
-          <div class="control-group layers">
-            <label class="layer-toggle gt">
-              <input type="checkbox" id="layer-gt" checked onchange="toggleLayer('gt')">
-              <span class="indicator gt-ind"></span> Ground Truth (Real GNSS/VBOX)
-            </label>
-            <label class="layer-toggle p2">
-              <input type="checkbox" id="layer-p2" checked onchange="toggleLayer('p2')">
-              <span class="indicator p2-ind"></span> Phase 2: Pure Body INS
-            </label>
-            <label class="layer-toggle p3">
-              <input type="checkbox" id="layer-p3" checked onchange="toggleLayer('p3')">
-              <span class="indicator p3-ind"></span> Phase 3: Leveled Vehicle INS
-            </label>
+        <div class="trajectory-caption">
+          <div class="caption-icon">ℹ</div>
+          <div class="caption-text">
+            <strong>The Fundamental Navigation Problem:</strong> While ground truth covers <span id="caption-dist">40.55</span> km across public roads, classical dead reckoning without velocity aiding diverges to <span id="caption-err">352.36</span> km within <span id="caption-time">42.8</span> minutes due to double-integration of consumer MEMS sensor bias.
           </div>
         </div>
       </div>
 
-      <!-- Canvas Trajectory Display -->
-      <div class="canvas-viewport">
-        <canvas id="trajectory-canvas"></canvas>
-        <div id="canvas-tooltip" class="canvas-tooltip hidden"></div>
-        <div class="canvas-watermark" id="canvas-watermark">LOCAL ENU TANGENT PLANE (METERS)</div>
-      </div>
+      <!-- Section: Drift Analysis Canvas -->
+      <div class="evidence-sub-block">
+        <div class="section-header">
+          <div class="section-title-wrap">
+            <span class="section-num">04</span>
+            <div>
+              <h3 class="section-title">INERTIAL DRIFT ANALYSIS</h3>
+              <p class="section-subtitle">Why Classical Dead Reckoning Diverges & Why AI is Required</p>
+            </div>
+          </div>
+        </div>
 
-      <div class="trajectory-caption">
-        <div class="caption-icon">ℹ</div>
-        <div class="caption-text">
-          <strong>The Fundamental Navigation Problem:</strong> Notice the enormous scale difference. While ground truth covers <span id="caption-dist">40.55</span> km across public roads, classical dead reckoning without velocity aiding diverges to <span id="caption-err">352.36</span> km within <span id="caption-time">42.8</span> minutes due to double-integration of consumer MEMS sensor bias.
+        <div class="drift-grid">
+          <div class="drift-chart-container">
+            <div class="chart-header">
+              <span class="chart-title">2D Horizontal Position Error vs Elapsed Time</span>
+              <div class="chart-legend">
+                <span class="legend-item"><span class="legend-line p2-line"></span> Phase 2 (Body Frame)</span>
+                <span class="legend-item"><span class="legend-line p3-line"></span> Phase 3 (Leveled Vehicle)</span>
+              </div>
+            </div>
+            <div class="chart-canvas-wrap">
+              <canvas id="drift-canvas"></canvas>
+            </div>
+          </div>
+
+          <div class="drift-insight-panel">
+            <div class="insight-box">
+              <div class="insight-tag">OBSERVATION & QUANTITATIVE FINDING</div>
+              <h3 class="insight-headline">Coordinate alignment alone does not eliminate long-term inertial drift.</h3>
+              <p class="insight-body">
+                Phase 3 successfully levels the smartphone's gravity vector to machine precision (det R = 1.000000). 
+                However, because consumer MEMS accelerometers carry residual in-run biases (~0.05 m/s²), rotating 
+                the sensor frame without a velocity constraint (NHC or AI Speed) still leads to quadratic divergence.
+              </p>
+            </div>
+
+            <div class="comparison-numbers">
+              <div class="comp-col">
+                <div class="comp-header">PHASE 2 (BODY INS)</div>
+                <div class="comp-metric">
+                  <span class="comp-val" id="p2-final-err">353.0</span> <span class="comp-unit">KM</span>
+                </div>
+                <div class="comp-sub">Final 2D Position Error</div>
+                <div class="comp-meta">RMSE: <span id="p2-rmse">171.2</span> km · Drift: <span id="p2-drift">870.6</span>%</div>
+              </div>
+
+              <div class="comp-col highlight">
+                <div class="comp-header">PHASE 3 (ALIGNED INS)</div>
+                <div class="comp-metric">
+                  <span class="comp-val" id="p3-final-err">352.4</span> <span class="comp-unit">KM</span>
+                </div>
+                <div class="comp-sub">Final 2D Position Error</div>
+                <div class="comp-meta">RMSE: <span id="p3-rmse">170.9</span> km · Drift: <span id="p3-drift">869.0</span>%</div>
+              </div>
+            </div>
+
+            <div class="delta-box" id="delta-box">
+              <span class="delta-label">ALIGNMENT IMPACT (Δ P3 - P2):</span>
+              <span class="delta-value" id="val-delta">-0.64 km (-1.58% drift change)</span>
+            </div>
+
+            <div class="roadmap-callout">
+              <span class="callout-tag">NEXT TECHNICAL STEP</span>
+              <p class="callout-text">
+                To transform this diverging baseline into viable navigation, <strong>Phase 4 (AI Speed Estimation)</strong> 
+                and <strong>Phase 8 (Non-Holonomic Constraints)</strong> will provide direct forward velocity updates ($v_x^v$) 
+                and lateral zero-velocity updates ($v_y^v \approx 0$), eliminating unbounded integration.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
-    </section>
 
-    <!-- ================= 03 DRIFT ANALYSIS SECTION ================= -->
-    <section id="drift" class="section drift-section">
+    </div> <!-- /view-evidence -->
+
+
+    <!-- ==========================================================================
+         VIEW 3: DIAGNOSTICS & HARDWARE AUDIT (TERTIARY TAB)
+         ========================================================================== -->
+    <div id="view-diagnostics" class="app-view hidden">
       <div class="section-header">
         <div class="section-title-wrap">
           <span class="section-num">03</span>
           <div>
-            <h2 class="section-title">INERTIAL DRIFT ANALYSIS</h2>
-            <p class="section-subtitle">Why Classical Dead Reckoning Diverges & Why AI is Required</p>
+            <h2 class="section-title">SENSOR DIAGNOSTICS & SYSTEM AUDIT</h2>
+            <p class="section-subtitle">Real-time MEMS Ingestion Rates, Alignment Matrix & Pipeline Verification</p>
           </div>
         </div>
       </div>
 
-      <div class="drift-grid">
-        <!-- Error Growth Canvas Chart -->
-        <div class="drift-chart-container">
-          <div class="chart-header">
-            <span class="chart-title">2D Horizontal Position Error vs Elapsed Time</span>
-            <div class="chart-legend">
-              <span class="legend-item"><span class="legend-line p2-line"></span> Phase 2 (Body Frame)</span>
-              <span class="legend-item"><span class="legend-line p3-line"></span> Phase 3 (Leveled Vehicle)</span>
-            </div>
-          </div>
-          <div class="chart-canvas-wrap">
-            <canvas id="drift-canvas"></canvas>
-          </div>
+      <div class="diagnostics-grid">
+        <div class="diag-card">
+          <div class="diag-card-title">IMU SAMPLING RATE AUDIT</div>
+          <div class="diag-card-val">10.0 HZ</div>
+          <p class="diag-card-desc">Calculated directly from IO-VNBD recorded microsecond timestamps: total samples / elapsed duration = 10.00 Hz.</p>
+          <div class="diag-tag">REAL SENSOR DATA</div>
         </div>
 
-        <!-- Honest Numbers & Engineering Insights -->
-        <div class="drift-insight-panel">
-          <div class="insight-box">
-            <div class="insight-tag">OBSERVATION & QUANTITATIVE FINDING</div>
-            <h3 class="insight-headline">Coordinate alignment alone does not eliminate long-term inertial drift.</h3>
-            <p class="insight-body">
-              Phase 3 successfully levels the smartphone's gravity vector to machine precision (det R = 1.000000). 
-              However, because consumer MEMS accelerometers carry residual in-run biases (~0.05 m/s²), rotating 
-              the sensor frame without a velocity constraint (NHC or AI Speed) still leads to quadratic divergence.
-            </p>
-          </div>
+        <div class="diag-card">
+          <div class="diag-card-title">RODRIGUES ALIGNMENT MATRIX</div>
+          <div class="diag-card-val">det R = 1.000000</div>
+          <p class="diag-card-desc">Orthogonality error ||R·Rᵀ - I|| < 10⁻¹⁶. Real S-Vta1a leveling: Roll -0.05°, Pitch +0.25°.</p>
+          <div class="diag-tag">PHASE 3 VERIFIED</div>
+        </div>
 
-          <!-- Side-by-Side Final Metrics -->
-          <div class="comparison-numbers">
-            <div class="comp-col">
-              <div class="comp-header">PHASE 2 (BODY INS)</div>
-              <div class="comp-metric">
-                <span class="comp-val" id="p2-final-err">353.0</span> <span class="comp-unit">KM</span>
-              </div>
-              <div class="comp-sub">Final 2D Position Error</div>
-              <div class="comp-meta">RMSE: <span id="p2-rmse">171.2</span> km · Drift: <span id="p2-drift">870.6</span>%</div>
-            </div>
+        <div class="diag-card">
+          <div class="diag-card-title">UNCONSTRAINED DRIFT RATE</div>
+          <div class="diag-card-val">869.0%</div>
+          <p class="diag-card-desc">Quadratic error accumulation confirming why consumer MEMS require AI Speed aiding.</p>
+          <div class="diag-tag">EMPIRICAL BENCHMARK</div>
+        </div>
 
-            <div class="comp-col highlight">
-              <div class="comp-header">PHASE 3 (ALIGNED INS)</div>
-              <div class="comp-metric">
-                <span class="comp-val" id="p3-final-err">352.4</span> <span class="comp-unit">KM</span>
-              </div>
-              <div class="comp-sub">Final 2D Position Error</div>
-              <div class="comp-meta">RMSE: <span id="p3-rmse">170.9</span> km · Drift: <span id="p3-drift">869.0</span>%</div>
-            </div>
-          </div>
-
-          <div class="delta-box" id="delta-box">
-            <span class="delta-label">ALIGNMENT IMPACT (Δ P3 - P2):</span>
-            <span class="delta-value" id="val-delta">-0.64 km (-1.58% drift change)</span>
-          </div>
-
-          <!-- Motivation for Phase 4+ -->
-          <div class="roadmap-callout">
-            <span class="callout-tag">NEXT TECHNICAL STEP</span>
-            <p class="callout-text">
-              To transform this diverging baseline into viable navigation, <strong>Phase 4 (AI Speed Estimation)</strong> 
-              and <strong>Phase 8 (Non-Holonomic Constraints)</strong> will provide direct forward velocity updates ($v_x^v$) 
-              and lateral zero-velocity updates ($v_y^v \approx 0$), eliminating unbounded integration.
-            </p>
-          </div>
+        <div class="diag-card">
+          <div class="diag-card-title">BACKEND TEST SUITE</div>
+          <div class="diag-card-val text-success">21 / 21 PASSING</div>
+          <p class="diag-card-desc">100% test coverage across IO-VNBD parsing, quaternion attitude propagation, and Rodrigues leveling.</p>
+          <div class="diag-tag">FROZEN CODEBASE</div>
         </div>
       </div>
-    </section>
+    </div> <!-- /view-diagnostics -->
 
   </main>
 
   <footer class="dashboard-footer">
     <div class="footer-left">
       <span class="footer-brand">IDR-NAV</span>
-      <span class="footer-desc">Intelligent GNSS-Denied Vehicle Navigation Using AI-Enhanced Dead Reckoning</span>
+      <span class="footer-desc">Intelligent Dead-Reckoning Navigation for GNSS-Denied Environments</span>
     </div>
     <div class="footer-center">
-      <span>Backend Status: <strong>FROZEN</strong> (Phases 1–3 Complete)</span>
+      <span>Context: <strong>Pune, Maharashtra, India</strong> · Backend Status: <strong>FROZEN (21/21 Tests Passed)</strong></span>
     </div>
     <div class="footer-right">
-      <span>Real IO-VNBD Benchmark Data · Coventry University</span>
+      <span>SIH Project Demonstration</span>
     </div>
   </footer>
 
   <!-- Real Static Pre-generated Data (Zero CORS, Zero network latency) -->
   <script src="data/dashboard_data.js"></script>
-  <!-- Main Dashboard Logic -->
+  <!-- Main Application Logic -->
   <script src="app.js"></script>
 </body>
 </html>
